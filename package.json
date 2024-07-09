@@ -1,5 +1,19 @@
 {
   "dependencies": {
-    "dotenv": "^16.4.5"
-  }
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.4.5",
+    "typescript": "^5.5.3"
+  },
+  "name": "gachabot",
+  "description": "",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "compile": "tsc -p .",
+    "start": "node dist/index.js",
+    "all": "npm run compile && npm run start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
