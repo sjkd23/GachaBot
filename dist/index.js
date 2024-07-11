@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const dotenv_1 = require("dotenv");
+const addcard_1 = require("./commands/addcard");
 (0, dotenv_1.config)();
 const token = process.env.BOT_TOKEN;
 const clientID = process.env.CLIENT_ID;
@@ -33,7 +34,9 @@ function main() {
         try {
             console.log('Started refreshing application (/) commands.');
             yield rest.put(discord_js_1.Routes.applicationGuildCommands(clientID, guildID), {
-                body: []
+                body: [
+                    addcard_1.AddCard.info.toJSON()
+                ]
             });
             console.log('Successfully reloaded application (/) commands.');
         }
@@ -42,4 +45,14 @@ function main() {
         }
     });
 }
+client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!interaction.isChatInputCommand())
+        return;
+    const { commandName } = interaction;
+    console.log(`user ${interaction.user.username} (${interaction.user.id}) ran the '${commandName}' command | Guild: ${interaction.guild} |`
+        + ` Channel: ${interaction.channel} | Timestamp: ${interaction.createdAt}`);
+    if (commandName === 'addcard') {
+        yield addcard_1.AddCard.run(interaction);
+    }
+}));
 main();

@@ -6,6 +6,7 @@ import {
     GatewayIntentBits
   } from 'discord.js';
 import { config } from 'dotenv';
+import { AddCard } from './commands/addcard';
 
 config();
 
@@ -39,14 +40,30 @@ const intents = [
       await rest.put(
         Routes.applicationGuildCommands(clientID!, guildID!),
         {
-          body: []
+          body: [
+            AddCard.info.toJSON()
+          ]
         }
       );
-  
+      
       console.log('Successfully reloaded application (/) commands.');
     } catch (error) {
       console.error(error);
     }
   }
+
+  client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+
+    const { commandName } = interaction;
+
+    console.log(
+      `user ${interaction.user.username} (${interaction.user.id}) ran the '${commandName}' command | Guild: ${interaction.guild} |`
+      + ` Channel: ${interaction.channel} | Timestamp: ${interaction.createdAt}`);
+    
+    if (commandName === 'addcard') {
+      await AddCard.run(interaction);
+    }
+  })
 
   main();
