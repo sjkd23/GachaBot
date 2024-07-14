@@ -21,7 +21,7 @@ const intents = [
     GatewayIntentBits.MessageContent
   ];
   
-  const options: ClientOptions = { intents: intents };
+  const options: ClientOptions = { intents: intents }; 
   
   const client = new Client(options);
   

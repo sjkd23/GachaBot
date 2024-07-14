@@ -1,4 +1,6 @@
 import pool from './db';
+import { Card, Rarity } from './definitions';
+import { rarityToNumber } from './utils';
 
 export async function insertPlayer(discord_id: string, username: string) {
     const query = 'INSERT INTO player (discord_id, username) VALUES ($1, $2)';
@@ -6,10 +8,62 @@ export async function insertPlayer(discord_id: string, username: string) {
     await pool.query(query, values);
 }
 
-export async function insertCard(name: string, base_score: number, rarity: number, description: string, series: string, image_url: string, ) {
-    const query = 'INSERT INTO card (name, base_score, rarity, description, series, image_url) VALUES ($1, $2, $3, $4, $5, $6)'
-    const values = [name, base_score, rarity, description, series, image_url];
-    await pool.query(query, values);
+async function generateUniqueCardID(): Promise<string> {
+    let uniqueID = false;
+
+    const query = 'SELECT * FROM card WHERE id = $1';
+    let id = '';
+
+    while (!uniqueID) {
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const randomLetters = Array.from({ length: 2 }, () => letters[Math.floor(Math.random() * letters.length)]).join('');
+        const randomNumbers = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+        const randomID = `${randomLetters}${randomNumbers}`;
+
+        const result = await pool.query(query, [randomID]);
+
+        if (result.rows.length === 0) {
+            id = randomID;
+            uniqueID = true;
+        }
+    }
+    return id;
+}
+
+async function ensureUniqueCard(card: Card): Promise<void> {
+    const query = `
+        SELECT 1 FROM card 
+        WHERE 
+            LOWER(name) = LOWER($1) OR 
+            LOWER(description) = LOWER($2) OR 
+            LOWER(image_url) = LOWER($3)
+    `;
+    const values = [card.name, card.description, card.url];
+
+    const result = await pool.query(query, values);
+
+    if (result.rows.length > 0) {
+        throw new Error('Card with the same name, description, or URL already exists.');
+    }
+}
+
+export async function insertCard(name: string, base_score: number, rarity: Rarity, description: string, url: string, author: string = 'Base game card'): Promise<boolean> {
+
+    const card: Card = { name, score: base_score, rarity, description, url, author }
+    await ensureUniqueCard(card);
+    const id = await generateUniqueCardID();
+    const rarityNumber = await rarityToNumber(rarity);
+
+    const query = 'INSERT INTO card (id, name, base_score, rarity, description, image_url, author) VALUES ($1, $2, $3, $4, $5, $6, $7)'
+    const values = [id, name, base_score, rarityNumber, description, url, author];
+    const result = await pool.query(query, values);
+
+
+    if (result.rowCount && result.rowCount > 0) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 export async function getAllCards() {
@@ -43,7 +97,7 @@ export async function givePlayerCard(discord_id: string, unique_card_id: string)
 
     try {
         const checkRes = await pool.query(checkQuery, checkValues);
-        
+
         if (checkRes.rows.length === 0) {
             throw new Error('Card with the provided unique ID does not exist.');
         }

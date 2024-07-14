@@ -1,12 +1,15 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { ButtonStyle, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { insertCard } from "../dbFunctions";
-import { rarityToNumber, isRarity } from "../utils";
-import { Rarity } from "../definitions";
+import { rarityToNumber, checkRarity, checkURL, buildCardEmbed, createButton, createButtonRow } from "../utils";
+import { Card, Rarity } from "../definitions";
+import { buttonCollector } from "../collectors/buttonCollector";
+
 
 const MAX_CARD_NAME_LENGTH = 32;
 const MAX_DESCRIPTION_LENGTH = 128;
+const MAX_AUTHOR_LENGTH = 128;
 const RARITIES = [
-    { name: 'random', value: 'random'},
+    { name: 'random', value: 'random' },
     { name: 'common', value: 'common' },
     { name: 'uncommon', value: 'uncommon' },
     { name: 'rare', value: 'rare' },
@@ -14,7 +17,7 @@ const RARITIES = [
     { name: 'divine', value: 'divine' }
 ];
 
-const DEFAULT_SERIES = 'Base series';
+const DEFAULT_AUTHOR = 'Base author';
 
 export const AddCard = {
     info: new SlashCommandBuilder()
@@ -35,7 +38,7 @@ export const AddCard = {
         .addStringOption(option =>
             option.setName('rarity')
                 .setDescription('Choose the cards rarity. Leave blank to make it random!')
-                .addChoices(RARITIES)
+                .addChoices(...RARITIES)
                 .setRequired(true)
         )
         .addIntegerOption(option =>
@@ -49,32 +52,83 @@ export const AddCard = {
                 .setRequired(true)
         )
         .addStringOption(option =>
-            option.setName('series')
-                .setDescription('What series is this card a part of? (leave blank for base game cards)')
+            option.setName('author')
+                .setDescription('What author is this card a part of? (leave blank for base game cards)')
                 .setRequired(false)
         ),
 
     run: async (interaction: ChatInputCommandInteraction): Promise<void> => {
-        
+
         const name = interaction.options.getString('card_name');
         const description = interaction.options.getString('description');
-        const rarity = interaction.options.getString('rarity');
+        const rarityGiven = interaction.options.getString('rarity');
         const score = interaction.options.getInteger('score_value');
         const url = interaction.options.getString('image_url');
-        let series = interaction.options.getString('series') || DEFAULT_SERIES;
+        let author = interaction.options.getString('author') || DEFAULT_AUTHOR;
 
-        if (!name || !description || !rarity || !score || !url) {
-            await interaction.reply({ content: 'Missing required fields.', ephemeral: true });
+        await interaction.deferReply({ ephemeral: true });
+
+
+        if (!name || !description || !rarityGiven || !score || !url) {
+            await interaction.followUp({ content: 'Missing required fields.', ephemeral: true });
             return;
         }
 
-        if (!isRarity(rarity)) {
-            await interaction.reply({ content: 'Invalid rarity provided.', ephemeral: true });
+        const rarity = await checkRarity(rarityGiven);
+
+        const isValid = await checkURL(url);
+
+        if (!isValid) {
+            await interaction.followUp('invalid URL provided. Please test your URL yourself to see if it goes to an image.');
             return;
         }
 
-        const rarityNumber = await rarityToNumber(rarity);
+        const card: Card = { name, description, rarity, score, url, author };
 
-        await insertCard(name, score, rarityNumber, description, series, url);
+        const embed = await buildCardEmbed(card);
+
+        const accept = createButton('Accept', 'button_accept', ButtonStyle.Success);
+        const deny = createButton('Deny', 'button_deny', ButtonStyle.Danger);
+
+        const row = createButtonRow([accept, deny]);
+
+        try {
+            const embedMessage = await interaction.followUp({
+                content: 'Is this the card you\'d like to make?',
+                embeds: [embed],
+                components: [row]
+            });
+        } catch (e) {
+            await interaction.followUp({ content: `Error sending embed`, ephemeral: true });
+            console.error(`Error sending embed in channel: ${interaction.channel?.id}(embed: ${embed})`, e)
+            return;
+        }
+
+        const buttonID = await buttonCollector(interaction);
+
+        if (buttonID === 'button_accept') {
+
+            try {
+            const result = await insertCard(name, score, rarity, description, url, author);
+
+            if (result) {
+                await interaction.followUp({
+                    content: `${interaction.user} Card successfully added to the game!`,
+                    embeds: [embed]
+                });
+                console.log(`${interaction.user.id} has added card: Name: ${card.name} to the database`);
+            }
+        } catch(err) {
+            console.log(`${interaction.user.id} failed to add card: Name: ${card.name}, Desc: ${card.description}, URL: ${card.url} `, err);
+            await interaction.followUp({content: `Error adding card to database. Make sure it is a unique card. If issue persists, please contact a developer.`, ephemeral: true});
+        }
+
+        } else if (buttonID === 'button_deny') {
+            await interaction.followUp({ content: `Card was not added to the game, please run the command again if you'd like to retry!`, ephemeral: true});
+            return;
+        } else {
+            await interaction.followUp({content: `You did not respond in time.`, ephemeral: true})
+            return;
+        }
     }
 };
