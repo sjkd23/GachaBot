@@ -1,7 +1,7 @@
 import { ButtonStyle, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { insertCard } from "../dbFunctions";
-import { rarityToNumber, checkRarity, checkURL, buildCardEmbed, createButton, createButtonRow } from "../utils";
-import { Card, Rarity } from "../definitions";
+import { checkRarity, checkURL, buildCardEmbed, createButton, createButtonRow } from "../utils";
+import { Card } from "../definitions";
 import { buttonCollector } from "../collectors/buttonCollector";
 
 
@@ -41,11 +41,6 @@ export const AddCard = {
                 .addChoices(...RARITIES)
                 .setRequired(true)
         )
-        .addIntegerOption(option =>
-            option.setName('score_value')
-                .setDescription('Enter the base score value for your new card')
-                .setRequired(true)
-        )
         .addStringOption(option =>
             option.setName('image_url')
                 .setDescription('Please enter the URL for your cards image')
@@ -62,14 +57,13 @@ export const AddCard = {
         const name = interaction.options.getString('card_name');
         const description = interaction.options.getString('description');
         const rarityGiven = interaction.options.getString('rarity');
-        const score = interaction.options.getInteger('score_value');
         const url = interaction.options.getString('image_url');
         let author = interaction.options.getString('author') || DEFAULT_AUTHOR;
 
         await interaction.deferReply({ ephemeral: true });
 
 
-        if (!name || !description || !rarityGiven || !score || !url) {
+        if (!name || !description || !rarityGiven || !url) {
             await interaction.followUp({ content: 'Missing required fields.', ephemeral: true });
             return;
         }
@@ -83,7 +77,7 @@ export const AddCard = {
             return;
         }
 
-        const card: Card = { name, description, rarity, score, url, author };
+        const card: Card = { name, description, rarity, url, author };
 
         const embed = await buildCardEmbed(card);
 
@@ -109,7 +103,7 @@ export const AddCard = {
         if (buttonID === 'button_accept') {
 
             try {
-            const result = await insertCard(name, score, rarity, description, url, author);
+            const result = await insertCard(name, rarity, description, url, author);
 
             if (result) {
                 await interaction.followUp({
