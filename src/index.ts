@@ -7,6 +7,8 @@ import {
   } from 'discord.js';
 import { config } from 'dotenv';
 import { AddCard } from './commands/addcard';
+import { ViewCards } from './commands/viewcards';
+import { Roll } from './commands/roll';
 
 config();
 
@@ -41,7 +43,9 @@ const intents = [
         Routes.applicationGuildCommands(clientID!, guildID!),
         {
           body: [
-            AddCard.info.toJSON()
+            AddCard.info.toJSON(),
+            ViewCards.info.toJSON(),
+            Roll.info.toJSON()
           ]
         }
       );
@@ -63,6 +67,12 @@ const intents = [
     
     if (commandName === 'addcard') {
       await AddCard.run(interaction);
+    }
+    if(commandName === 'viewcards') {
+      await ViewCards.run(interaction);
+    }
+    if(commandName === 'roll') {
+      await Roll.run(interaction);
     }
   })
 

@@ -1,6 +1,6 @@
 import pool from './db';
-import { Card, Rarity } from './definitions';
-import { rarityToNumber } from './utils';
+import { Card, Rarity } from './constants/definitions';
+import { numberToRarity, rarityToNumber } from './utils';
 
 export async function insertPlayer(discord_id: string, username: string) {
     const query = 'INSERT INTO player (discord_id, username) VALUES ($1, $2)';
@@ -8,7 +8,7 @@ export async function insertPlayer(discord_id: string, username: string) {
     await pool.query(query, values);
 }
 
-async function generateUniqueCardID(): Promise<string> {
+export async function generateUniqueCardID(): Promise<string> {
     let uniqueID = false;
 
     const query = 'SELECT * FROM card WHERE id = $1';
@@ -36,7 +36,7 @@ async function ensureUniqueCard(card: Card): Promise<void> {
         WHERE 
             LOWER(name) = LOWER($1) OR 
             LOWER(description) = LOWER($2) OR 
-            LOWER(image_url) = LOWER($3)
+            LOWER(url) = LOWER($3)
     `;
     const values = [card.name, card.description, card.url];
 
@@ -47,15 +47,15 @@ async function ensureUniqueCard(card: Card): Promise<void> {
     }
 }
 
-export async function insertCard(name: string, base_score: number, rarity: Rarity, description: string, url: string, author: string = 'Base game card'): Promise<boolean> {
+export async function insertCard(name: string, rarity: Rarity, description: string, url: string, author: string = 'Base game card'): Promise<boolean> {
 
-    const card: Card = { name, score: base_score, rarity, description, url, author }
-    await ensureUniqueCard(card);
     const id = await generateUniqueCardID();
+    const card: Card = { id, name, rarity, description, url, author }
+    await ensureUniqueCard(card);
     const rarityNumber = await rarityToNumber(rarity);
 
-    const query = 'INSERT INTO card (id, name, base_score, rarity, description, image_url, author) VALUES ($1, $2, $3, $4, $5, $6, $7)'
-    const values = [id, name, base_score, rarityNumber, description, url, author];
+    const query = 'INSERT INTO card (id, name, rarity, description, url, author) VALUES ($1, $2, $3, $4, $5, $6)'
+    const values = [id, name, rarityNumber, description, url, author];
     const result = await pool.query(query, values);
 
 
@@ -91,23 +91,115 @@ export async function getAllItems() {
     return res.rows;
 }
 
-export async function givePlayerCard(discord_id: string, unique_card_id: string) {
-    const checkQuery = 'SELECT 1 FROM card_inventory WHERE unique_card_id = $1';
-    const checkValues = [unique_card_id];
+export async function checkCardList({
+    id,
+    name,
+    rarity,
+    url,
+    author,
+}: {
+    id?: string,
+    name?: string;
+    rarity?: Rarity;
+    url?: string;
+    author?: string;
+} = {}): Promise<Card[]> {
 
-    try {
-        const checkRes = await pool.query(checkQuery, checkValues);
+    let content: string[] = [];
+    const params: any[] = [];
 
-        if (checkRes.rows.length === 0) {
-            throw new Error('Card with the provided unique ID does not exist.');
-        }
+    if (name) {
+        params.push(name);
+        content.push(`name = $${params.length}`);
+    }
 
-        const updateQuery = 'UPDATE card_inventory SET discord_id = $1 WHERE unique_card_id = $2';
-        const updateValues = [discord_id, unique_card_id];
-        await pool.query(updateQuery, updateValues);
-        console.log('Card successfully given to player.');
-    } catch (err) {
-        console.log('Error giving player card:');
-        console.error(err);
+    if (rarity) {
+        const rarityNumber = await rarityToNumber(rarity);
+        params.push(rarityNumber);
+        content.push(`rarity = $${params.length}`);
+    }
+
+    if (url) {
+        params.push(url);
+        content.push(`url = $${params.length}`);
+    }
+
+    if (author) {
+        params.push(author);
+        content.push(`author = $${params.length}`);
+    }
+
+    const query = content.length === 0
+        ? 'SELECT * FROM card'
+        : `SELECT * FROM card WHERE ${content.join(' AND ')}`;
+
+    const res = await pool.query(query, params);
+
+    const cards: Card[] = await Promise.all(
+        res.rows.map(async (row) => ({
+            id: row.id,
+            name: row.name,
+            description: row.description,
+            rarity: await numberToRarity(row.rarity),
+            url: row.url,
+            author: row.author,
+        }))
+    );
+
+    return cards;
+}
+
+
+export async function getCard(id: string): Promise<Card> {
+
+    const query = 'SELECT * FROM card WHERE id = $1';
+    const values = [id];
+
+    const res = await pool.query(query, values)
+    const row = res.rows[0];
+    const rarity = await numberToRarity(row.rarity);
+    const card: Card = { id: row.id, name: row.name, description: row.description, rarity: rarity, url: row.url, author: row.author }
+
+    return card;
+}
+
+export async function addCardToPlayerInventory(discord_id: string, card_id: string, random?: boolean): Promise<number> {
+    const query = 'SELECT * FROM player_card_inventory WHERE discord_id = $1 AND card_id = $2';
+    const values = [discord_id, card_id];
+
+    const res = await pool.query(query, values);
+
+    if (res) {
+        const newQuantity = res.rows[0].quanity + 1;
+        const updateQuery = `UPDATE player_card_inventory
+                             SET quantity = $3
+                             WHERE discord_id = $1 AND card_id = $2`;
+
+        await pool.query(updateQuery, [discord_id, card_id, newQuantity]);
+
+        return newQuantity;
+    } else {
+        const insertQuery = 'INSERT INTO player_card_inventory (discord_id, card_id) VALUES ($1, $2)';
+        await pool.query(insertQuery, values);
+
+        return 1;
+    }
+}
+
+export async function changeWallet(id: string, amount: number): Promise<boolean> {
+    const findQuery = 'SELECT * FROM player WHERE discord_id = $1';
+    const findRes = await pool.query(findQuery, [id]);
+
+    const newAmount = findRes.rows[0].wallet - amount;
+
+    console.log(newAmount)
+    if (newAmount >= 0) {
+        const query = 'UPDATE player SET wallet = $2 WHERE discord_id = $1';
+        const values = [id, newAmount];
+        await pool.query(query, values);
+
+        return true;
+    } else {
+        return false;
     }
 }

@@ -1,21 +1,8 @@
 import { ButtonStyle, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { insertCard } from "../dbFunctions";
+import { generateUniqueCardID, insertCard } from "../dbFunctions";
 import { checkRarity, checkURL, buildCardEmbed, createButton, createButtonRow } from "../utils";
-import { Card } from "../definitions";
+import { Card, MAX_CARD_AUTHOR_LENGTH, MAX_CARD_DESCRIPTION_LENGTH, MAX_CARD_NAME_LENGTH, RARITIES } from "../constants/definitions";
 import { buttonCollector } from "../collectors/buttonCollector";
-
-
-const MAX_CARD_NAME_LENGTH = 32;
-const MAX_DESCRIPTION_LENGTH = 128;
-const MAX_AUTHOR_LENGTH = 128;
-const RARITIES = [
-    { name: 'random', value: 'random' },
-    { name: 'common', value: 'common' },
-    { name: 'uncommon', value: 'uncommon' },
-    { name: 'rare', value: 'rare' },
-    { name: 'legendary', value: 'legendary' },
-    { name: 'divine', value: 'divine' }
-];
 
 const DEFAULT_AUTHOR = 'Base author';
 
@@ -32,12 +19,13 @@ export const AddCard = {
         .addStringOption(option =>
             option.setName('description')
                 .setDescription('Enter your new cards description (max 128 char.)')
-                .setMaxLength(MAX_DESCRIPTION_LENGTH)
+                .setMaxLength(MAX_CARD_DESCRIPTION_LENGTH)
                 .setRequired(true)
         )
         .addStringOption(option =>
             option.setName('rarity')
                 .setDescription('Choose the cards rarity. Leave blank to make it random!')
+                .addChoices({name: 'random', value: 'random'})
                 .addChoices(...RARITIES)
                 .setRequired(true)
         )
@@ -49,6 +37,7 @@ export const AddCard = {
         .addStringOption(option =>
             option.setName('author')
                 .setDescription('What author is this card a part of? (leave blank for base game cards)')
+                .setMaxLength(MAX_CARD_AUTHOR_LENGTH)
                 .setRequired(false)
         ),
 
@@ -77,7 +66,8 @@ export const AddCard = {
             return;
         }
 
-        const card: Card = { name, description, rarity, url, author };
+        const id = '';
+        const card: Card = { id, name, description, rarity, url, author };
 
         const embed = await buildCardEmbed(card);
 
