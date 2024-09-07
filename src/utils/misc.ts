@@ -1,7 +1,26 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, HexColorString, MessageActionRowComponentBuilder } from "discord.js";
-import { Card, Rarity } from "./constants/definitions";
+import { Card, Rarity } from "../constants/definitions";
 import axios from 'axios';
-import { checkCardList, getAllCards } from "./dbFunctions";
+import { checkCardList } from "../dbFunctions";
+import sharp from 'sharp';
+import { THUMBNAILS } from "../constants/pictures";
+
+export async function buildCardEmbed(card: Card): Promise<EmbedBuilder> {
+
+    const rarityThumb = await getRarityThumb(card.rarity);
+
+    const footer = `📝 ${card.author} | 📚 ${card.series}`;
+
+    const embed = new EmbedBuilder()
+        .setTitle(card.name)
+        //.setDescription()
+        .addFields({name: ' ', value: `*${card.description}*`})
+        .setImage(card.url)
+        .setFooter({ text: footer })
+        .setColor(await getEmbedColor(card.rarity))
+        .setThumbnail(rarityThumb)
+    return embed;
+}
 
 export async function rarityToNumber(rarity: Rarity): Promise<number> {
 
@@ -76,19 +95,6 @@ export async function checkURL(url: string): Promise<boolean> {
     }
 }
 
-export async function buildCardEmbed(card: Card): Promise<EmbedBuilder> {
-    
-    const embed = new EmbedBuilder()
-        .setTitle(card.name)
-        .setDescription(card.description)
-        .setImage(card.url)
-        .setAuthor({ name: card.rarity })
-        .setFooter({ text: `${card.author}` })
-        .setColor(await getEmbedColor(card.rarity))
-
-    return embed;
-}
-
 export function createButton(label: string, customId: string, style: ButtonStyle = ButtonStyle.Primary, disabled: boolean = false): ButtonBuilder {
     return new ButtonBuilder()
         .setLabel(label)
@@ -126,15 +132,15 @@ export async function numberToRarity(num: number): Promise<Rarity> {
 async function getEmbedColor(rarity: Rarity): Promise<HexColorString> {
     let color: HexColorString;
     if (rarity === 'common') {
-        color = `#808080`; //grey
+        color = `#bbbebb`; //grey
     } else if (rarity === 'uncommon') {
-        color = `#00A36C`; //green
+        color = `#b3ecd1`; //green
     } else if (rarity === 'rare') {
-        color = `#FF69B4`; //pink
+        color = `#ffa6c5`; //pink
     } else if (rarity === 'legendary') {
-        color = `#D4A017`;// orange gold
+        color = `#f48830`;// orange gold
     } else {
-        color = `#000000` //black (shouldnt show up)
+        color = `#000000` //divine - tbd
     }
     return color;
 };
@@ -153,3 +159,48 @@ export async function getRandomCard(): Promise<Card> {
 function randomIntFromInterval(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
+
+async function getImageDimensions(imageUrl: string): Promise<{ width: number, height: number }> {
+    try {
+        // Fetch the image from the URL using axios
+        const response = await axios({
+            url: imageUrl,
+            responseType: 'arraybuffer', // Get the response as a buffer for processing
+        });
+
+        // Use sharp to get image metadata, including dimensions
+        const image = sharp(response.data);
+        const metadata = await image.metadata();
+
+        if (metadata.width && metadata.height) {
+            return {
+                width: metadata.width,
+                height: metadata.height,
+            };
+        } else {
+            throw new Error('Unable to retrieve image dimensions');
+        }
+    } catch (error) {
+        console.error('Error fetching image dimensions:', error);
+        throw error;
+    }
+}
+
+async function getRarityThumb(rarity: Rarity): Promise<string> {
+    if (rarity === 'common') {
+        return THUMBNAILS.common;
+
+    } else if (rarity === 'uncommon') {
+        return THUMBNAILS.uncommon;
+
+    } else if (rarity === 'rare') {
+        return THUMBNAILS.rare;
+
+    } else if (rarity === 'legendary') {
+        return THUMBNAILS.legendary;
+
+    } else {
+        return '';
+    }
+}
+

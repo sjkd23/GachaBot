@@ -1,12 +1,18 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { MAX_CARD_NAME_LENGTH, MAX_CARD_AUTHOR_LENGTH, Rarity, Card } from "../constants/definitions";
 import { RARITIES } from "../constants/definitions";
-import { checkCardList, getCard } from "../dbFunctions";
-import { buildCardEmbed, createButtonRow } from "../utils";
+import { checkCardList, getAllSeries, getCard } from "../dbFunctions";
+import { buildCardEmbed, createButtonRow } from "../utils/misc";
 import { BUTTONS as b } from "../constants/buttons";
 import { buttonCollector } from "../collectors/buttonCollector";
 
-export const ViewCards = {
+export const ViewCards = async () => {
+    const seriesOptions = (await getAllSeries()).map(series => ({
+        name: series,
+        value: series
+    }));
+    
+    return {
     info: new SlashCommandBuilder()
         .setName('viewcards')
         .setDescription('Look at all cards in the database, can sort between name, rarity, author and/or URL')
@@ -31,9 +37,17 @@ export const ViewCards = {
                 .setDescription('The name of the author you want to search for (usually their discord tag)')
                 .setMaxLength(MAX_CARD_AUTHOR_LENGTH)
                 .setRequired(false)
+        )
+        .addStringOption(option =>
+            option.setName('series')
+                .setDescription('Sort by series')
+                .addChoices(...seriesOptions)
+                .setRequired(false)
         ),
 
     run: async (interaction: ChatInputCommandInteraction): Promise<void> => {
+
+        await interaction.deferReply();
 
         const options = interaction.options;
 
@@ -41,16 +55,18 @@ export const ViewCards = {
         const rarity = options.getString('rarity');
         const url = options.getString('url');
         const author = options.getString('author');
+        const series = options.getString('series');
 
         const cards: Card[] = await checkCardList({
             name: name || undefined,
             rarity: rarity as Rarity || undefined,
             url: url || undefined,
-            author: author || undefined
+            author: author || undefined,
+            series: series || undefined
         });
 
         if (!cards) {
-            await interaction.reply(`No cards were found with the given specifications.`);
+            await interaction.editReply(`No cards were found with the given specifications.`);
         }
 
         let currentCard = 0;
@@ -72,7 +88,7 @@ export const ViewCards = {
 
 
         try {
-            const message = await interaction.reply({ content: msgContent, embeds: [embed], components: [buttonRow] });
+            const message = await interaction.editReply({ content: msgContent, embeds: [embed], components: [buttonRow] });
         } catch (err) {
             await interaction.reply('An error has occured, please contact a developer');
             return;
@@ -104,6 +120,7 @@ export const ViewCards = {
             }
         }
     }
+}
 }
 
 async function buttonStatus(currentCard: number, cardAmnt: number): Promise<void> {
