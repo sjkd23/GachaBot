@@ -15,7 +15,8 @@ export type Card = {
     description: string,
     rarity: Rarity,
     url: string,
-    author: string
+    author: string,
+    series: string
 }
 
 export const MAX_CARD_NAME_LENGTH = 32;
