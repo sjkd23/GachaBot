@@ -1,8 +1,9 @@
 import { ButtonStyle, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { generateUniqueCardID, getAllSeries, insertCard } from "../dbFunctions";
-import { checkRarity, checkURL, buildCardEmbed, createButton, createButtonRow } from "../utils/misc";
-import { Card, MAX_CARD_AUTHOR_LENGTH, MAX_CARD_DESCRIPTION_LENGTH, MAX_CARD_NAME_LENGTH, RARITIES } from "../constants/definitions";
+import { getAllSeries, insertCard } from "../dbFunctions";
+import { checkRarity, checkURL, cardEmbed, createButton, createButtonRow } from "../utils/misc";
+import { Card, MAX_CARD_DESCRIPTION_LENGTH, MAX_CARD_NAME_LENGTH, RARITIES } from "../constants/definitions";
 import { buttonCollector } from "../collectors/buttonCollector";
+import { DM_NOT_ALLOWED_ERR } from "../constants/errors";
 
 export const AddCard = async () => {
     const seriesOptions = (await getAllSeries()).map(series => ({
@@ -44,8 +45,12 @@ export const AddCard = async () => {
                     .setRequired(false)
                     .addChoices(...seriesOptions)
             ),
-        
+
         run: async (interaction: ChatInputCommandInteraction): Promise<void> => {
+            if (!interaction.channel) {
+                await interaction.reply(DM_NOT_ALLOWED_ERR);
+                return;
+            }
             const options = interaction.options;
 
             const author = interaction.user.username;
@@ -75,7 +80,7 @@ export const AddCard = async () => {
             const id = ''; // Generate or set the card ID here
             const card: Card = { id, name, description, rarity, url, author, series };
 
-            const embed = await buildCardEmbed(card);
+            const embed = await cardEmbed(card);
 
             const accept = createButton('Accept', 'button_accept', ButtonStyle.Success);
             const deny = createButton('Deny', 'button_deny', ButtonStyle.Danger);

@@ -46,19 +46,19 @@ export async function processAndUploadToCloudinary(imageUrl: string, rarity: Rar
 
         try {
             let red, green, blue = 1;
-            if(rarity === 'common') {
+            if (rarity === 'common') {
                 red = 187;
                 green = 190;
                 blue = 187;
-            } else if(rarity === 'uncommon') {
+            } else if (rarity === 'uncommon') {
                 red = 179;
                 green = 236;
                 blue = 209;
-            } else if(rarity === 'rare') {
+            } else if (rarity === 'rare') {
                 red = 255;
                 green = 166;
                 blue = 197;
-            } else if(rarity === 'legendary') {
+            } else if (rarity === 'legendary') {
                 red = 244;
                 green = 136;
                 blue = 48;

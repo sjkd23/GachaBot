@@ -1,11 +1,58 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, HexColorString, MessageActionRowComponentBuilder } from "discord.js";
-import { Card, Rarity } from "../constants/definitions";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, EmbedBuilder, HexColorString, MessageActionRowComponentBuilder } from "discord.js";
+import { Card, Player, Rarity } from "../constants/definitions";
 import axios from 'axios';
 import { checkCardList } from "../dbFunctions";
 import sharp from 'sharp';
 import { THUMBNAILS } from "../constants/pictures";
 
-export async function buildCardEmbed(card: Card): Promise<EmbedBuilder> {
+
+export async function playerStatsEmbed(player: Player, cards: Card[], interaction: ChatInputCommandInteraction): Promise<EmbedBuilder> {
+
+    let common, uncommon, rare, legendary, divine = 0;
+
+    if (cards && cards.length > 0) {
+        const count = countRarities(cards);
+        common = count.common;
+        uncommon = count.uncommon;
+        rare = count.rare;
+        legendary = count.legendary;
+        divine = count.divine;
+    }
+
+    const user = await getUserInfo(player.discord_id, interaction);
+
+    const color = getRandomColor();
+
+    const embed = new EmbedBuilder()
+        .setTitle(`${player.username}'s profile`)
+        .addFields(
+            {name: ' ', 
+            value:
+            `**__CARDS__**
+            \`Common: ${common}\`\n
+            \`Uncommon: ${uncommon}\`\n
+            \`Rare: ${rare}\`\n
+            \`Legendary: ${legendary}\`\n
+            \`Divine: ${divine}\`\n
+            __**Wallet:**__ ${player.wallet}
+            `, inline: true}
+        )
+        .setColor(color)
+        
+        if(user) {
+            const username = user.username;
+            const avatar = user.displayAvatarURL({size: 1024 });
+
+        embed.setAuthor({name: username, iconURL: avatar})
+        }
+        if (cards && cards.length > 0 && cards[0].url) {
+                embed.setThumbnail(cards[0].url);
+        }
+
+    return embed
+}
+
+export async function cardEmbed(card: Card): Promise<EmbedBuilder> {
 
     const rarityThumb = await getRarityThumb(card.rarity);
 
@@ -13,8 +60,7 @@ export async function buildCardEmbed(card: Card): Promise<EmbedBuilder> {
 
     const embed = new EmbedBuilder()
         .setTitle(card.name)
-        //.setDescription()
-        .addFields({name: ' ', value: `*${card.description}*`})
+        .addFields({ name: ' ', value: `*${card.description}*` })
         .setImage(card.url)
         .setFooter({ text: footer })
         .setColor(await getEmbedColor(card.rarity))
@@ -149,10 +195,9 @@ export async function getRandomCard(): Promise<Card> {
 
     const rarity = getRandomRarity();
     const cards = await checkCardList({ rarity: rarity });
-    const card = randomIntFromInterval(1, cards.length);
+    const card = randomIntFromInterval(1, cards.length - 1);
 
     return cards[card];
-
 }
 
 
@@ -204,3 +249,52 @@ async function getRarityThumb(rarity: Rarity): Promise<string> {
     }
 }
 
+
+// Function to get a random color in hex code format
+function getRandomColor(): number {
+    const colors = [
+        0x3498db, // Blue
+        0x2ecc71, // Green
+        0xf1c40f, // Yellow
+        0xe74c3c, // Red
+        0xe91e63  // Pink
+    ];
+
+    // Get a random color from the list
+    return colors[Math.floor(Math.random() * colors.length)];
+}
+
+export function countRarities(cards: Card[]): Record<Rarity, number> {
+
+    const rarityCount: Record<Rarity, number> = {
+        common: 0,
+        uncommon: 0,
+        rare: 0,
+        legendary: 0,
+        divine: 0
+    };
+
+    cards.forEach(card => {
+        // Check if the rarity is valid before incrementing
+        if (rarityCount[card.rarity] !== undefined) {
+            rarityCount[card.rarity]++;
+        } else {
+            console.warn(`Unexpected rarity: ${card.rarity}`);
+        }
+    });
+
+    return rarityCount;
+}
+
+
+export async function getUserInfo(discord_id: string, interaction: ChatInputCommandInteraction) {
+    try {
+        // Fetch the user object by ID
+        const user = await interaction.client.users.fetch(discord_id);
+        return user;
+
+    } catch (error) {
+        console.error(`Failed to fetch user info for ID ${discord_id}:`, error);
+        return null;
+    }
+}

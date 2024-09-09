@@ -1,5 +1,5 @@
 import pool from './db';
-import { Card, Rarity } from './constants/definitions';
+import { Card, Player, Rarity } from './constants/definitions';
 import { numberToRarity, rarityToNumber } from './utils/misc';
 import { processAndUploadToCloudinary } from './utils/api';
 
@@ -7,6 +7,21 @@ export async function insertPlayer(discord_id: string, username: string) {
     const query = 'INSERT INTO player (discord_id, username) VALUES ($1, $2)';
     const values = [discord_id, username];
     await pool.query(query, values);
+}
+
+export async function getPlayer(discord_id: string): Promise<Player> {
+    const query = 'SELECT * FROM player WHERE discord_id = $1'
+    const res = await pool.query(query, [discord_id]);
+
+    const row = res.rows[0];
+
+    const player: Player = {
+    discord_id: row.discord_id,
+    username: row.username,
+    wallet: row.wallet
+    }
+
+    return player;
 }
 
 export async function generateUniqueCardID(): Promise<string> {
@@ -75,13 +90,6 @@ export async function getAllCards() {
     return res.rows;
 }
 
-export async function getPlayerCardInventory(discord_id: string) {
-    const query = 'SELECT * FROM card_inventory WHERE discord_id = $1';
-    const values = [discord_id];
-    const res = await pool.query(query, values);
-    return res.rows;
-}
-
 export async function insertItem(name: string, effect: string) {
     const query = 'INSERT INTO item (name, effect) VALUES ($1, $2)'
     const values = [name, effect];
@@ -138,7 +146,7 @@ export async function checkCardList({
         content.push(`author = $${params.length}`);
     }
 
-    if(series) {
+    if (series) {
         params.push(series);
         content.push(`series = $${params.length}`);
     }
@@ -231,4 +239,35 @@ export async function getAllSeries(): Promise<string[]> {
         }
     }
     return allSeries;
+}
+
+export async function getPlayerCards(discord_id: string): Promise<Card[]> {
+    const pciQuery = 'SELECT card_id FROM player_card_inventory WHERE discord_id = $1'
+    const pciRes = await pool.query(pciQuery, [discord_id]);
+
+    if (pciRes.rows.length === 0) {
+        return [];
+    }
+
+    const values: string[] = pciRes.rows.map(row => row.card_id);
+
+    for(let i = 0; i < pciRes.rows.length; i++){
+        values.push(pciRes.rows[i].card_id);
+    }
+
+    const query = `SELECT * FROM card WHERE id = ANY($1::text[])`;
+    const res = await pool.query(query, [values])
+    const cards: Card[] = await Promise.all(
+        res.rows.map(async (row) => ({
+            id: row.id,
+            name: row.name,
+            description: row.description,
+            rarity: await numberToRarity(row.rarity),
+            url: row.url,
+            author: row.author,
+            series: row.series
+        }))
+    );
+
+    return cards;
 }
