@@ -1,13 +1,16 @@
 import { ButtonStyle, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { generateUniqueCardID, getAllSeries, insertCard } from "../dbFunctions";
-import { checkRarity, checkURL, buildCardEmbed, createButton, createButtonRow } from "../utils/misc";
-import { Card, MAX_CARD_AUTHOR_LENGTH, MAX_CARD_DESCRIPTION_LENGTH, MAX_CARD_NAME_LENGTH, RARITIES } from "../constants/definitions";
-import { buttonCollector } from "../collectors/buttonCollector";
+import { getAllSeries, getSeriesID, idToSeries, insertCard } from "../dbFunctions";
+import { checkRarity, checkURL } from "../utils/misc";
+import { Card, MAX_CARD_DESCRIPTION_LENGTH, MAX_CARD_NAME_LENGTH, RARITIES } from "../constants/definitions";
+import { componentCollector } from "../collectors/componentCollectors";
+import { DM_NOT_ALLOWED_ERR } from "../constants/errors";
+import { createButton, createButtonRow } from "../utils/componentsUils";
+import { cardEmbed } from "../utils/embeds";
 
 export const AddCard = async () => {
     const seriesOptions = (await getAllSeries()).map(series => ({
-        name: series,
-        value: series
+        name: series.name,
+        value: series.name
     }));
 
     return {
@@ -44,8 +47,12 @@ export const AddCard = async () => {
                     .setRequired(false)
                     .addChoices(...seriesOptions)
             ),
-        
+
         run: async (interaction: ChatInputCommandInteraction): Promise<void> => {
+            if (!interaction.channel) {
+                await interaction.reply(DM_NOT_ALLOWED_ERR);
+                return;
+            }
             const options = interaction.options;
 
             const author = interaction.user.username;
@@ -54,7 +61,7 @@ export const AddCard = async () => {
             const description = options.getString('description');
             const rarityGiven = options.getString('rarity');
             const url = options.getString('image_url');
-            const series = options.getString('series') || 'Wanderer';
+            const selectedSeries = options.getString('series') || 'Wanderer';
 
             await interaction.deferReply({ ephemeral: true });
 
@@ -71,11 +78,12 @@ export const AddCard = async () => {
                 await interaction.followUp('Invalid URL provided. Please test your URL yourself to see if it goes to an image.');
                 return;
             }
-
-            const id = ''; // Generate or set the card ID here
+            const seriesID = await getSeriesID(selectedSeries) 
+            const series = await idToSeries(seriesID);
+            const id = '';
             const card: Card = { id, name, description, rarity, url, author, series };
 
-            const embed = await buildCardEmbed(card);
+            const embed = await cardEmbed(card);
 
             const accept = createButton('Accept', 'button_accept', ButtonStyle.Success);
             const deny = createButton('Deny', 'button_deny', ButtonStyle.Danger);
@@ -94,7 +102,7 @@ export const AddCard = async () => {
                 return;
             }
 
-            const buttonID = await buttonCollector(interaction);
+            const buttonID = await componentCollector(interaction);
 
             if (buttonID === 'button_accept') {
                 try {

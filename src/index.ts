@@ -9,6 +9,8 @@ import { config } from 'dotenv';
 import { AddCard } from './commands/addcard';
 import { ViewCards } from './commands/viewcards';
 import { Roll } from './commands/roll';
+import { Stats } from './commands/stats';
+import { Inventory } from './commands/inventory';
 
 config();
 
@@ -48,7 +50,9 @@ async function main() {
         body: [
           addCardCommand.info.toJSON(),
           viewCardCommand.info.toJSON(),
-          Roll.info.toJSON()
+          Roll.info.toJSON(),
+          Stats.info.toJSON(),
+          Inventory.info.toJSON()
         ]
       }
     );
@@ -79,6 +83,12 @@ client.on('interactionCreate', async (interaction) => {
   }
   if (commandName === 'roll') {
     await Roll.run(interaction);
+  }
+  if (commandName === 'stats') {
+    await Stats.run(interaction);
+  }
+  if (commandName === 'inventory') {
+    await Inventory.run(interaction);
   }
 })
 
