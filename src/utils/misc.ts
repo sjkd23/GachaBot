@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction } from "discord.js";
-import { Card, Rarity, Series } from "../constants/definitions";
+import { Card, POINT_REWARDS, Rarity, Series } from "../constants/definitions";
 import axios from 'axios';
 import { checkCardList } from "../dbFunctions";
 import sharp from 'sharp';
@@ -182,9 +182,6 @@ export function countSeries(cards: Card[], series: Series[]): Record<string, num
     return seriesCount;
 }
 
-
-
-
 export async function getUserInfo(discord_id: string, interaction: ChatInputCommandInteraction) {
     try {
         // Fetch the user object by ID
@@ -200,8 +197,8 @@ export async function getUserInfo(discord_id: string, interaction: ChatInputComm
 export async function getCardsByRarity(cards: Card[], rarity: Rarity): Promise<Card[]> {
 
     const sortedCards: Card[] = [];
-    for(let card of cards) {
-        if(card.rarity === rarity) {
+    for (let card of cards) {
+        if (card.rarity === rarity) {
             sortedCards.push(card);
         }
     }
@@ -212,10 +209,61 @@ export async function getCardsByRarity(cards: Card[], rarity: Rarity): Promise<C
 export async function getCardsBySeries(cards: Card[], series: Series): Promise<Card[]> {
 
     const sortedCards: Card[] = [];
-    for(let card of cards) {
-        if(card.series.id === series.id) {
+    for (let card of cards) {
+        if (card.series.id === series.id) {
             sortedCards.push(card);
         }
     }
     return sortedCards;
 }
+
+export async function randomPointReward(): Promise<{ name: string; value: number }> {
+
+    const totalWeight = POINT_REWARDS.reduce((sum, reward) => sum + reward.weight, 0);
+
+    const random = Math.random() * totalWeight;
+
+    let cumulativeWeight = 0;
+
+    for (const reward of POINT_REWARDS) {
+        cumulativeWeight += reward.weight;
+        if (random < cumulativeWeight) {
+            return reward;
+        }
+    }
+
+    return POINT_REWARDS[POINT_REWARDS.length - 1];
+}
+
+export function parseTimestamp(timestampString: string): Date {
+    return new Date(timestampString);
+}
+
+export function hasBeen24Hours(lastUsedTimestamp: Date): { expired: boolean; timeLeft?: number } {
+    const currentTime = new Date();
+    const timeDifference = currentTime.getTime() - lastUsedTimestamp.getTime(); // in milliseconds
+    const hours24 = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+    if (timeDifference >= hours24) {
+        return { expired: true };
+    } else {
+        const timeLeft = hours24 - timeDifference;
+        return { expired: false, timeLeft };
+    }
+}
+
+export function formatTimeLeft(timeLeftInMs: number): string {
+    const totalSeconds = Math.floor(timeLeftInMs / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+  
+    let timeString = '';
+    if (hours > 0) timeString += `${hours}h `;
+    if (minutes > 0) timeString += `${minutes}m `;
+    timeString += `${seconds}s`;
+  
+    return timeString.trim();
+  }
+  
+

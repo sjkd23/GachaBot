@@ -67,7 +67,7 @@ export async function processAndUploadToCloudinary(imageUrl: string, rarity: Rar
             // Step 2: Add a border using sharp
             const borderedImageBuffer = await sharp(imageBuffer)
                 .extend({
-                    top: 5, bottom: 5, left: 5, right: 5,
+                    top: 15, bottom: 15, left: 15, right: 15,
                     background: { r: red, g: green, b: blue, alpha: 1 }, // Example green border
                 })
                 .toBuffer();
