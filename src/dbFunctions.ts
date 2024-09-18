@@ -1,6 +1,6 @@
 import pool from './db';
 import { Card, Item, Player, PlayerInventory, Rarity, Series } from './constants/definitions';
-import { numberToRarity, rarityToNumber } from './utils/misc';
+import { hasBeen24Hours, numberToRarity, parseTimestamp, rarityToNumber } from './utils/misc';
 import { processAndUploadToCloudinary } from './utils/api';
 
 export async function insertPlayer(discord_id: string, username: string) {
@@ -72,8 +72,8 @@ export async function insertCard(name: string, rarity: Rarity, description: stri
     await ensureUniqueCard(card);
     const rarityNumber = await rarityToNumber(rarity);
 
-    const query = 'INSERT INTO card (id, name, rarity, description, url, author) VALUES ($1, $2, $3, $4, $5, $6)'
-    const values = [id, name, rarityNumber, description, image, author];
+    const query = 'INSERT INTO card (id, name, rarity, description, url, author, series_id) VALUES ($1, $2, $3, $4, $5, $6, $7)'
+    const values = [id, name, rarityNumber, description, image, author, series.id];
     const result = await pool.query(query, values);
 
 
@@ -312,3 +312,35 @@ export async function idToSeries(seriesID: number): Promise<Series> {
     );
     return series[0];
 }
+export async function checkDailyCalendarTime(discord_id: string): Promise<{ canUse: boolean; timeLeft?: number }> {
+    const query = 'SELECT last_use FROM daily_calendar WHERE discord_id = $1 LIMIT 1';
+    const res = await pool.query(query, [discord_id]);
+  
+    if (res.rows.length > 0) {
+      const lastUsedTimestamp = parseTimestamp(res.rows[0].last_use);
+      const { expired, timeLeft } = hasBeen24Hours(lastUsedTimestamp);
+  
+      if (expired) {
+        await addToCalendar(discord_id);
+        return { canUse: true };
+      } else {
+        return { canUse: false, timeLeft };
+      }
+    } else {
+      await addToCalendar(discord_id);
+      return { canUse: true };
+    }
+  }
+  
+
+export async function addToCalendar(discord_id: string): Promise<void> {
+    const query = `
+      INSERT INTO daily_calendar (discord_id, last_use)
+      VALUES ($1, NOW())
+      ON CONFLICT (discord_id) DO UPDATE
+      SET last_use = EXCLUDED.last_use
+    `;
+  
+    await pool.query(query, [discord_id]);
+  }
+  

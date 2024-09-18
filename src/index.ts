@@ -11,6 +11,7 @@ import { ViewCards } from './commands/viewcards';
 import { Roll } from './commands/roll';
 import { Stats } from './commands/stats';
 import { Inventory } from './commands/inventory';
+import { Daily } from './commands/daily';
 
 config();
 
@@ -52,7 +53,8 @@ async function main() {
           viewCardCommand.info.toJSON(),
           Roll.info.toJSON(),
           Stats.info.toJSON(),
-          Inventory.info.toJSON()
+          Inventory.info.toJSON(),
+          Daily.info.toJSON()
         ]
       }
     );
@@ -89,6 +91,9 @@ client.on('interactionCreate', async (interaction) => {
   }
   if (commandName === 'inventory') {
     await Inventory.run(interaction);
+  }
+  if (commandName === 'daily') {
+    await Daily.run(interaction);
   }
 })
 

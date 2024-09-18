@@ -40,6 +40,17 @@ export const RARITIES = [
     { name: 'divine', value: 'divine' }
 ];
 
+export const POINT_REWARDS = [
+    { name: 'Tiny Point Reward', value: 1, weight: 1 },
+    { name: 'Small Point Reward', value: 10, weight: 43 },
+    { name: 'Medium Point Reward', value: 25, weight: 30 },
+    { name: 'Large Point Reward', value: 50, weight: 15 },
+    { name: 'Huge Point Reward', value: 100, weight: 7 },
+    { name: 'Insane Point Reward', value: 250, weight: 3 },
+    { name: 'JACKPOT Point Reward', value: 500, weight: 1 }
+  ];
+  
+
 export const MAX_CARD_NAME_LENGTH = 32;
 export const MAX_CARD_DESCRIPTION_LENGTH = 128;
 export const MAX_CARD_AUTHOR_LENGTH = 128;
