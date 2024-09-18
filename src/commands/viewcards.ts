@@ -3,12 +3,12 @@ import { MAX_CARD_NAME_LENGTH, MAX_CARD_AUTHOR_LENGTH, Rarity, Card } from "../c
 import { RARITIES } from "../constants/definitions";
 import { checkCardList, getAllSeries } from "../dbFunctions";
 import { DM_NOT_ALLOWED_ERR } from "../constants/errors";
-import { handleCardCycling } from "../utils/components";
+import { handleCardCycling } from "../utils/componentsUils";
 
 export const ViewCards = async () => {
     const seriesOptions = (await getAllSeries()).map(series => ({
-        name: series,
-        value: series
+        name: series.name,
+        value: series.name
     }));
 
     return {
@@ -76,7 +76,7 @@ export const ViewCards = async () => {
             const cardAmnt = cards.length;
 
             const getMsgContent = (currentCard: number, cardAmnt: number): string => {
-                return `Found ${cardAmnt} cards ! (${currentCard + 1} / ${cardAmnt})`;
+                return `Found ${cardAmnt} cards ! (${currentCard + 1}/${cardAmnt})`;
             };
 
             await handleCardCycling(interaction, cards, cardAmnt, getMsgContent);

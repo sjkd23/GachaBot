@@ -67,4 +67,16 @@ export namespace BUTTONS {
         .setCustomId('yes')
         .setLabel('✅ Yes')
         .setStyle(ButtonStyle.Success);
+    
+    export const CARD_DETAILS_ID: string = 'card_details';
+    export const CARD_DETAILS_BUTTON = new ButtonBuilder()
+        .setCustomId('card_details')
+        .setLabel('🃏 Card Details')
+        .setStyle(ButtonStyle.Primary);
+
+    export const ITEM_DETAILS_ID: string = 'item_details';
+    export const ITEM_DETAILS_BUTTON = new ButtonBuilder()
+        .setCustomId('item_details')
+        .setLabel('🔮 Item Details')
+        .setStyle(ButtonStyle.Primary);
 }

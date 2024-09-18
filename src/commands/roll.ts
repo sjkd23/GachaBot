@@ -1,9 +1,10 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder, User } from "discord.js";
 import { addCardToPlayerInventory, changeWallet } from "../dbFunctions";
-import { cardEmbed, getRandomCard } from "../utils/misc";
+import { getRandomCard } from "../utils/misc";
 import { DM_NOT_ALLOWED_ERR } from "../constants/errors";
 import { Card } from "../constants/definitions";
-import { handleCardCycling } from "../utils/components";
+import { handleCardCycling } from "../utils/componentsUils";
+import { cardEmbed } from "../utils/embeds";
 
 
 export const Roll = {
@@ -43,6 +44,7 @@ export const Roll = {
         const cards: Card[] = [];
         for (let i = 0; i < amount; i++) {
             const card = await getRandomCard();
+            await addCardToPlayerInventory(user_id, card.id)
             cards.push(card);
         }
 
@@ -51,7 +53,7 @@ export const Roll = {
             await interaction.editReply({ content: 'You rolled and got...', embeds: [embed] })
         } else {
             const getMsgContent = (currentCard: number, cardAmnt: number, user?: User): string => {
-                return `You rolled and got... (${currentCard}/${cardAmnt})`;
+                return `You rolled and got... (${currentCard + 1}/${cardAmnt})`;
             }
 
             await handleCardCycling(interaction, cards, amount, getMsgContent);

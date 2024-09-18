@@ -1,14 +1,16 @@
 import { ButtonStyle, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { getAllSeries, insertCard } from "../dbFunctions";
-import { checkRarity, checkURL, cardEmbed, createButton, createButtonRow } from "../utils/misc";
+import { getAllSeries, getSeriesID, idToSeries, insertCard } from "../dbFunctions";
+import { checkRarity, checkURL } from "../utils/misc";
 import { Card, MAX_CARD_DESCRIPTION_LENGTH, MAX_CARD_NAME_LENGTH, RARITIES } from "../constants/definitions";
-import { buttonCollector } from "../collectors/buttonCollector";
+import { componentCollector } from "../collectors/componentCollectors";
 import { DM_NOT_ALLOWED_ERR } from "../constants/errors";
+import { createButton, createButtonRow } from "../utils/componentsUils";
+import { cardEmbed } from "../utils/embeds";
 
 export const AddCard = async () => {
     const seriesOptions = (await getAllSeries()).map(series => ({
-        name: series,
-        value: series
+        name: series.name,
+        value: series.name
     }));
 
     return {
@@ -59,7 +61,7 @@ export const AddCard = async () => {
             const description = options.getString('description');
             const rarityGiven = options.getString('rarity');
             const url = options.getString('image_url');
-            const series = options.getString('series') || 'Wanderer';
+            const selectedSeries = options.getString('series') || 'Wanderer';
 
             await interaction.deferReply({ ephemeral: true });
 
@@ -76,8 +78,9 @@ export const AddCard = async () => {
                 await interaction.followUp('Invalid URL provided. Please test your URL yourself to see if it goes to an image.');
                 return;
             }
-
-            const id = ''; // Generate or set the card ID here
+            const seriesID = await getSeriesID(selectedSeries) 
+            const series = await idToSeries(seriesID);
+            const id = '';
             const card: Card = { id, name, description, rarity, url, author, series };
 
             const embed = await cardEmbed(card);
@@ -99,7 +102,7 @@ export const AddCard = async () => {
                 return;
             }
 
-            const buttonID = await buttonCollector(interaction);
+            const buttonID = await componentCollector(interaction);
 
             if (buttonID === 'button_accept') {
                 try {

@@ -7,13 +7,29 @@ export type Card = {
     rarity: Rarity,
     url: string,
     author: string,
-    series: string
+    series: Series
 }
 
 export type Player = {
     discord_id: string,
     username: string,
     wallet: number
+}
+
+export type Series = {
+    id: string,
+    name: string,
+    description: string
+}
+
+export interface Item {
+    name: string;
+    description: string;
+}
+
+export interface PlayerInventory {
+    item: Item;
+    quantity: number;
 }
 
 export const RARITIES = [
@@ -27,5 +43,3 @@ export const RARITIES = [
 export const MAX_CARD_NAME_LENGTH = 32;
 export const MAX_CARD_DESCRIPTION_LENGTH = 128;
 export const MAX_CARD_AUTHOR_LENGTH = 128;
-
-

@@ -1,5 +1,5 @@
 import pool from './db';
-import { Card, Player, Rarity } from './constants/definitions';
+import { Card, Item, Player, PlayerInventory, Rarity, Series } from './constants/definitions';
 import { numberToRarity, rarityToNumber } from './utils/misc';
 import { processAndUploadToCloudinary } from './utils/api';
 
@@ -16,9 +16,9 @@ export async function getPlayer(discord_id: string): Promise<Player> {
     const row = res.rows[0];
 
     const player: Player = {
-    discord_id: row.discord_id,
-    username: row.username,
-    wallet: row.wallet
+        discord_id: row.discord_id,
+        username: row.username,
+        wallet: row.wallet
     }
 
     return player;
@@ -63,7 +63,7 @@ async function ensureUniqueCard(card: Card): Promise<void> {
     }
 }
 
-export async function insertCard(name: string, rarity: Rarity, description: string, url: string, author: string, series: string = 'Wanderer'): Promise<boolean> {
+export async function insertCard(name: string, rarity: Rarity, description: string, url: string, author: string, series: Series): Promise<boolean> {
 
     const image = await processAndUploadToCloudinary(url, rarity);
 
@@ -147,7 +147,8 @@ export async function checkCardList({
     }
 
     if (series) {
-        params.push(series);
+        const seriesID = await getSeriesID(series); 
+        params.push(seriesID);
         content.push(`series = $${params.length}`);
     }
 
@@ -165,10 +166,9 @@ export async function checkCardList({
             rarity: await numberToRarity(row.rarity),
             url: row.url,
             author: row.author,
-            series: row.series
+            series: await idToSeries(row.series_id)
         }))
     );
-
     return cards;
 }
 
@@ -181,7 +181,8 @@ export async function getCard(id: string): Promise<Card> {
     const res = await pool.query(query, values)
     const row = res.rows[0];
     const rarity = await numberToRarity(row.rarity);
-    const card: Card = { id: row.id, name: row.name, description: row.description, rarity: rarity, url: row.url, author: row.author, series: row.series }
+    const series = await idToSeries(row.series_id);
+    const card: Card = { id: row.id, name: row.name, description: row.description, rarity: rarity, url: row.url, author: row.author, series }
 
     return card;
 }
@@ -192,7 +193,7 @@ export async function addCardToPlayerInventory(discord_id: string, card_id: stri
 
     const res = await pool.query(query, values);
 
-    if (res.rowCount! > 0) {
+    if (res.rows.length > 0) {
         const newQuantity = res.rows[0].quantity + 1;
         const updateQuery = `UPDATE player_card_inventory
                              SET quantity = $3
@@ -215,7 +216,6 @@ export async function changeWallet(id: string, amount: number): Promise<number> 
 
     const newAmount = findRes.rows[0].wallet + amount;
 
-    console.log(newAmount)
     if (newAmount >= 0) {
         const query = 'UPDATE player SET wallet = $2 WHERE discord_id = $1';
         const values = [id, newAmount];
@@ -227,33 +227,15 @@ export async function changeWallet(id: string, amount: number): Promise<number> 
     }
 }
 
-export async function getAllSeries(): Promise<string[]> {
-    const query = 'SELECT DISTINCT series FROM card';
-
-    const res = await pool.query(query);
-    const allSeries: string[] = [];
-
-    if (res.rowCount! > 0) {
-        for (let row of res.rows) {
-            allSeries.push(row.series);
-        }
-    }
-    return allSeries;
-}
-
 export async function getPlayerCards(discord_id: string): Promise<Card[]> {
-    const pciQuery = 'SELECT card_id FROM player_card_inventory WHERE discord_id = $1'
-    const pciRes = await pool.query(pciQuery, [discord_id]);
+    const invQuery = 'SELECT card_id FROM player_card_inventory WHERE discord_id = $1'
+    const invRes = await pool.query(invQuery, [discord_id]);
 
-    if (pciRes.rows.length === 0) {
+    if (invRes.rows.length === 0) {
         return [];
     }
 
-    const values: string[] = pciRes.rows.map(row => row.card_id);
-
-    for(let i = 0; i < pciRes.rows.length; i++){
-        values.push(pciRes.rows[i].card_id);
-    }
+    const values: string[] = invRes.rows.map(row => row.card_id);
 
     const query = `SELECT * FROM card WHERE id = ANY($1::text[])`;
     const res = await pool.query(query, [values])
@@ -265,9 +247,68 @@ export async function getPlayerCards(discord_id: string): Promise<Card[]> {
             rarity: await numberToRarity(row.rarity),
             url: row.url,
             author: row.author,
-            series: row.series
+            series: await idToSeries(row.series_id)
         }))
     );
-
     return cards;
+}
+
+export async function getPlayerItems(discord_id: string): Promise<PlayerInventory[]> {
+
+    const query = `
+        SELECT i.name, i.description, pi.quantity
+        FROM player_item_inventory pi
+        JOIN item i ON pi.item_id = i.id
+        WHERE pi.discord_id = $1
+    `;
+    const res = await pool.query(query, [discord_id]);
+
+    if (res.rows.length === 0) {
+        return [];
+    }
+
+    const playerInventory: PlayerInventory[] = res.rows.map((row: any) => ({
+        item: {
+            name: row.name,
+            description: row.description
+        },
+        quantity: row.quantity
+    }));
+
+    return playerInventory;
+}
+
+export async function getAllSeries(): Promise<Series[]> {
+    const query = 'SELECT * FROM series ORDER BY name';
+    const res = await pool.query(query);
+
+    const series: Series[] = await Promise.all(
+        res.rows.map(async (row) => ({
+            id: row.id,
+            name: row.name,
+            description: row.description
+        }))
+    );
+    return series;
+}
+
+export async function getSeriesID(series: string): Promise<number> {
+    const query = 'SELECT id FROM series WHERE name = $1'
+    const res = await pool.query(query, [series])
+
+    return res.rows[0].id;
+}
+
+export async function idToSeries(seriesID: number): Promise<Series> {
+    const query = 'SELECT * FROM series WHERE id = $1'
+    const res = await pool.query(query, [seriesID]);
+
+    const series: Series[] = await Promise.all(
+        res.rows.map(async (row) => ({
+            id: row.id,
+            name: row.name,
+            description: row.description
+        }))
+    );
+    return series[0];
 }

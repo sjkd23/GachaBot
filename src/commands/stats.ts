@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { DM_NOT_ALLOWED_ERR } from "../constants/errors";
 import { getPlayer, getPlayerCards } from "../dbFunctions";
-import { playerStatsEmbed } from "../utils/misc";
+import { playerStatsEmbed } from "../utils/embeds";
 
 export const Stats = {
     info: new SlashCommandBuilder()
@@ -17,7 +17,7 @@ export const Stats = {
             await interaction.reply(DM_NOT_ALLOWED_ERR);
             return;
         }
-        const id = interaction.user.id; 
+        const id = interaction.user.id;
 
         const player = await getPlayer(id);
         const cards = await getPlayerCards(id)
