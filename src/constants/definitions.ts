@@ -27,10 +27,25 @@ export interface Item {
     description: string;
 }
 
-export interface PlayerInventory {
+export interface PlayerItemInventory {
     item: Item;
     quantity: number;
 }
+
+export type Fish = {
+    id: number,
+    name: string,
+    rarity: Rarity,
+    value: number,
+    url: string
+}
+
+export type PlayerFishInventory = {
+    discord_id: string,
+    fish_id: number,
+    quantity: number
+}
+
 
 export const RARITIES = [
     { name: 'common', value: 'common' },

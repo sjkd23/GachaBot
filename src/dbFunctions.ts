@@ -1,5 +1,5 @@
 import pool from './db';
-import { Card, Player, PlayerInventory, Rarity, Series } from './constants/definitions';
+import { Card, Fish, Player, PlayerItemInventory, Rarity, Series } from './constants/definitions';
 import { hasBeen24Hours, numberToRarity, parseTimestamp, rarityToNumber } from './utils/misc';
 import { processAndUploadToCloudinary } from './utils/api';
 
@@ -192,7 +192,6 @@ export async function checkCardList({
     return cards;
 }
 
-
 export async function getCard(id: string): Promise<Card> {
 
     const query = 'SELECT * FROM card WHERE id = $1';
@@ -207,7 +206,7 @@ export async function getCard(id: string): Promise<Card> {
     return card;
 }
 
-export async function addCardToPlayerInventory(discord_id: string, card_id: string): Promise<number> {
+export async function addCardToPlayerItemInventory(discord_id: string, card_id: string): Promise<number> {
     const query = 'SELECT * FROM player_card_inventory WHERE discord_id = $1 AND card_id = $2';
     const values = [discord_id, card_id];
 
@@ -273,7 +272,7 @@ export async function getPlayerCards(discord_id: string): Promise<Card[]> {
     return cards;
 }
 
-export async function getPlayerItems(discord_id: string): Promise<PlayerInventory[]> {
+export async function getPlayerItems(discord_id: string): Promise<PlayerItemInventory[]> {
 
     const query = `
         SELECT i.name, i.description, pi.quantity
@@ -287,7 +286,7 @@ export async function getPlayerItems(discord_id: string): Promise<PlayerInventor
         return [];
     }
 
-    const playerInventory: PlayerInventory[] = res.rows.map((row: any) => ({
+    const playerInventory: PlayerItemInventory[] = res.rows.map((row: any) => ({
         item: {
             name: row.name,
             description: row.description
@@ -362,4 +361,67 @@ export async function addToCalendar(discord_id: string): Promise<void> {
     `;
 
     await pool.query(query, [discord_id]);
+}
+
+export async function getFishByID(fish_id: number): Promise<Fish> {
+    const query = 'SELECT * FROM fish WHERE id = $1';
+    const res = await pool.query(query, [fish_id]);
+
+    const row = res.rows[0];
+
+    const fish: Fish = {
+        id: row.id,
+        name: row.name,
+        rarity: await numberToRarity(row.rarity),
+        value: row.value,
+        url: row.url
+    };
+    return fish;
+}
+
+export async function checkFishByRarity(rarity: Rarity): Promise<Fish[]> {
+    const rarityNumber = await rarityToNumber(rarity)
+    const query = 'SELECT * FROM fish WHERE rarity = $1'
+
+    const res = await pool.query(query, [rarityNumber]);
+
+    const fish: Fish[] = await Promise.all(
+        res.rows.map(async (row) => ({
+            id: row.id,
+            name: row.name,
+            rarity: await numberToRarity(row.rarity),
+            value: row.value,
+            url: row.url
+        }))
+    );
+    return fish;
+}
+
+export async function givePlayerFish(discord_id: string, fish_id: number): Promise<number> {
+    const query = `SELECT * FROM player_fish_inventory WHERE discord_id = $1 AND fish_id = $2`;
+    const values = [discord_id, fish_id];
+
+    const res = await pool.query(query, values);
+
+    if (res.rows.length > 0) {
+        const updateQuery =
+        'UPDATE player_fish_inventory ' + 
+        'SET quantity = $3 ' +
+        'WHERE discord_id = $1 AND fish_id = $2';
+
+        const newQuantity = res.rows[0].quantity + 1;
+        
+        const updateValues = [discord_id, fish_id, newQuantity];
+
+        await pool.query(updateQuery, updateValues);
+
+        return newQuantity;
+    } else {
+        const insertQuery = 
+        'INSERT INTO player_fish_inventory (discord_id, fish_id)' +
+        'VALUES ($1, $2)';
+
+        await pool.query(insertQuery, values);
+        return 1;
+    }
 }

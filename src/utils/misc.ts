@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction } from "discord.js";
-import { Card, POINT_REWARDS, Rarity, Series } from "../constants/definitions";
+import { Card, Fish, POINT_REWARDS, Rarity, Series } from "../constants/definitions";
 import axios from 'axios';
-import { checkCardList } from "../dbFunctions";
+import { checkCardList, checkFishByRarity } from "../dbFunctions";
 import sharp from 'sharp';
 
 export async function rarityToNumber(rarity: Rarity): Promise<number> {
@@ -22,7 +22,7 @@ export async function rarityToNumber(rarity: Rarity): Promise<number> {
     }
 }
 
-function getRandomRarity(): Rarity {
+export function getRandomRarity(): Rarity {
 
     const random = Math.random();
 
@@ -103,13 +103,22 @@ export async function getRandomCard(): Promise<Card> {
 
     const rarity = getRandomRarity();
     const cards = await checkCardList({ rarity: rarity });
-    const card = randomIntFromInterval(1, cards.length - 1);
+    const card = randomIntFromInterval(0, cards.length - 1);
 
     return cards[card];
 }
 
+export async function getRandomFish(rarity?: Rarity): Promise<Fish> {
+    if(!rarity) {
+        rarity = getRandomRarity();
+    }
+    const fish = await checkFishByRarity(rarity);
+    const random = randomIntFromInterval(0, fish.length - 1);
 
-function randomIntFromInterval(min: number, max: number) {
+    return fish[random];
+}
+
+export function randomIntFromInterval(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
@@ -265,5 +274,31 @@ export function formatTimeLeft(timeLeftInMs: number): string {
   
     return timeString.trim();
   }
-  
 
+export async function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function fishCatchTime(rarity: Rarity) {
+    let min = 1000;
+    let max = 3000;
+
+    if (rarity === 'common') {
+        min = 5000;
+        max = 7000;
+    } else if (rarity === 'uncommon') {
+        min = 2500;
+        max = 5000
+    } else if (rarity === 'rare') {
+        min = 1500;
+        max = 2500;
+    } else if (rarity === 'legendary') {
+        min = 500;
+        max = 1500;
+    } else {
+        min = 250;
+        max = 500;
+    }
+
+    return randomIntFromInterval(min, max);
+}

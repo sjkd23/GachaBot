@@ -85,4 +85,22 @@ export namespace BUTTONS {
         .setCustomId('random')
         .setLabel('🔁 Random')
         .setStyle(ButtonStyle.Primary);
-}
+
+    export const FISH_AGAIN_ID: string = 'fish_again';
+    export const FISH_AGAIN_BUTTON = new ButtonBuilder()
+        .setCustomId('fish_again')
+        .setLabel('🔁 Fish Again')
+        .setStyle(ButtonStyle.Primary);
+
+    export const WAIT_ID: string = 'wait';
+    export const WAIT_BUTTON = new ButtonBuilder()
+        .setCustomId('wait')
+        .setLabel('Wait...')
+        .setStyle(ButtonStyle.Danger);
+
+    export const CATCH_ID: string = 'catch';
+    export const CATCH_BUTTON = new ButtonBuilder()
+        .setCustomId('catch')
+        .setLabel('🎣 Catch!')
+        .setStyle(ButtonStyle.Success);
+    }

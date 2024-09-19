@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, User } from "discord.js";
-import { addCardToPlayerInventory, changeWallet, validPlayer } from "../dbFunctions";
+import { addCardToPlayerItemInventory, changeWallet, validPlayer } from "../dbFunctions";
 import { getRandomCard } from "../utils/misc";
 import { DM_NOT_ALLOWED_ERR, PLAYER_DOESNT_EXIST } from "../constants/errors";
 import { Card } from "../constants/definitions";
@@ -49,7 +49,7 @@ export const Roll = {
         const cards: Card[] = [];
         for (let i = 0; i < amount; i++) {
             const card = await getRandomCard();
-            await addCardToPlayerInventory(user_id, card.id)
+            await addCardToPlayerItemInventory(user_id, card.id)
             cards.push(card);
         }
 

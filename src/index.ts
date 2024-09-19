@@ -14,6 +14,7 @@ import { Inventory } from './commands/inventory';
 import { Daily } from './commands/daily';
 import { Start } from './commands/start';
 import { Help } from './commands/help';
+import { Fish } from './commands/fish';
 
 config();
 
@@ -58,7 +59,8 @@ async function main() {
           Inventory.info.toJSON(),
           Daily.info.toJSON(),
           Start.info.toJSON(),
-          Help.info.toJSON()
+          Help.info.toJSON(),
+          Fish.info.toJSON()
         ]
       }
     );
@@ -104,6 +106,9 @@ client.on('interactionCreate', async (interaction) => {
   }
   if (commandName === 'help') {
     await Help.run(interaction);
+  }
+  if (commandName === 'fish') {
+    await Fish.run(interaction);
   }
 })
 

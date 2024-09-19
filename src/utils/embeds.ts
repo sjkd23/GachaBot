@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction, EmbedBuilder, HexColorString, User } from "discord.js";
-import { Player, Card, PlayerInventory, Rarity } from "../constants/definitions";
+import { Player, Card, PlayerItemInventory, Rarity, Fish } from "../constants/definitions";
 import { countRarities, countSeries, getUserInfo } from "./misc";
 import { THUMBNAILS } from "../constants/pictures";
 import { getAllSeries } from "../dbFunctions";
@@ -71,7 +71,7 @@ export async function cardInventoryEmbed(user: User, cards: Card[]): Promise<Emb
     return embed
 }
 
-export async function itemInventoryEmbed(user: User, items: PlayerInventory[]): Promise<EmbedBuilder> {
+export async function itemInventoryEmbed(user: User, items: PlayerItemInventory[]): Promise<EmbedBuilder> {
     const embed = new EmbedBuilder()
         .setTitle(`${user.username}'s item inventory:`)
         .setAuthor({ name: user.username, iconURL: user.displayAvatarURL({ size: 1024 }) })
@@ -98,6 +98,16 @@ export async function cardEmbed(card: Card): Promise<EmbedBuilder> {
         .setFooter({ text: footer })
         .setColor(await getEmbedColor(card.rarity))
         .setThumbnail(rarityThumb)
+    return embed;
+}
+
+export async function fishEmbed(fish: Fish): Promise<EmbedBuilder> {
+
+    const embed = new EmbedBuilder()
+        .addFields({ name: ' ', value: `You caught a ${fish.name}!\n\n **${fish.rarity.toUpperCase()}** fish!` })
+        .setThumbnail(fish.url)
+        .setColor(await getEmbedColor(fish.rarity))
+    
     return embed;
 }
 
@@ -171,3 +181,5 @@ export const getSeriesList = (seriesCount: Record<string, number>): string => {
 
     return seriesList;
 };
+
+

@@ -14,4 +14,3 @@ export const THUMBNAILS = {
                 'https://cdn.discordapp.com/attachments/1209889694737895507/1281410339921203230/' +
                 'legendary-removebg-preview.png?ex=66db9de0&is=66da4c60&hm=d637c29218dc4b9af7ada12e52b610b646c813b76a9074a5d7e8b020186d8b25&'
 }
-
