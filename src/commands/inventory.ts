@@ -1,11 +1,12 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, ButtonBuilder, EmbedBuilder } from "discord.js";
 import { Card, PlayerInventory } from "../constants/definitions";
-import { getAllSeries, getPlayerCards, getPlayerItems } from "../dbFunctions";
+import { getAllSeries, getPlayerCards, getPlayerItems, validPlayer } from "../dbFunctions";
 import { createButtonRow, handleCardCycling, rarityCardSelect, seriesCardSelect, viewCardSelect } from "../utils/componentsUils";
 import { cardInventoryEmbed, itemInventoryEmbed } from "../utils/embeds";
 import { BUTTONS as b } from "../constants/componentConstants";
 import { componentCollector } from "../collectors/componentCollectors";
 import { getCardsByRarity, getCardsBySeries, isRarity } from "../utils/misc";
+import { DM_NOT_ALLOWED_ERR, PLAYER_DOESNT_EXIST } from "../constants/errors";
 
 export const Inventory = {
     info: new SlashCommandBuilder()
@@ -14,9 +15,15 @@ export const Inventory = {
 
     run: async (interaction: ChatInputCommandInteraction): Promise<void> => {
         if (!interaction.channel) {
-            await interaction.reply('DM not allowed');
+            await interaction.reply({content: DM_NOT_ALLOWED_ERR, ephemeral: true});
             return;
         }
+
+        if(!await validPlayer(interaction.user.id)) {
+            await interaction.reply({content: PLAYER_DOESNT_EXIST, ephemeral: true});
+            return;
+        }
+        
         await interaction.deferReply();
 
         const user = interaction.user;

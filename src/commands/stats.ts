@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { DM_NOT_ALLOWED_ERR } from "../constants/errors";
-import { getPlayer, getPlayerCards } from "../dbFunctions";
+import { DM_NOT_ALLOWED_ERR, PLAYER_DOESNT_EXIST } from "../constants/errors";
+import { getPlayer, getPlayerCards, validPlayer } from "../dbFunctions";
 import { playerStatsEmbed } from "../utils/embeds";
 
 export const Stats = {
@@ -14,7 +14,12 @@ export const Stats = {
 
     run: async (interaction: ChatInputCommandInteraction): Promise<void> => {
         if (!interaction.channel) {
-            await interaction.reply(DM_NOT_ALLOWED_ERR);
+            await interaction.reply({content: DM_NOT_ALLOWED_ERR, ephemeral: true});
+            return;
+        }
+
+        if(!await validPlayer(interaction.user.id)) {
+            await interaction.reply({content: PLAYER_DOESNT_EXIST, ephemeral: true});
             return;
         }
         const id = interaction.user.id;
@@ -25,6 +30,5 @@ export const Stats = {
 
         await interaction.reply({ content: `${interaction.user}`, embeds: [embed] });
         return;
-
     }
 }

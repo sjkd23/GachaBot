@@ -4,7 +4,6 @@ import { Readable } from 'stream';
 import axios from 'axios';
 import sharp from 'sharp';
 import { Rarity } from '../constants/definitions';
-import { insertCard } from '../dbFunctions';
 
 const cloudinary = require('cloudinary').v2;
 cloudinary.config({
@@ -67,8 +66,8 @@ export async function processAndUploadToCloudinary(imageUrl: string, rarity: Rar
             // Step 2: Add a border using sharp
             const borderedImageBuffer = await sharp(imageBuffer)
                 .extend({
-                    top: 15, bottom: 15, left: 15, right: 15,
-                    background: { r: red, g: green, b: blue, alpha: 1 }, // Example green border
+                    top: 5, bottom: 5, left: 5, right: 5,
+                    background: { r: red, g: green, b: blue, alpha: 1 },
                 })
                 .toBuffer();
 

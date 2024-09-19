@@ -1,8 +1,8 @@
-import { ButtonBuilder, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { MAX_CARD_NAME_LENGTH, MAX_CARD_AUTHOR_LENGTH, Rarity, Card } from "../constants/definitions";
 import { RARITIES } from "../constants/definitions";
-import { checkCardList, getAllSeries } from "../dbFunctions";
-import { DM_NOT_ALLOWED_ERR } from "../constants/errors";
+import { checkCardList, getAllSeries, validPlayer } from "../dbFunctions";
+import { DM_NOT_ALLOWED_ERR, PLAYER_DOESNT_EXIST } from "../constants/errors";
 import { handleCardCycling } from "../utils/componentsUils";
 
 export const ViewCards = async () => {
@@ -46,7 +46,12 @@ export const ViewCards = async () => {
 
         run: async (interaction: ChatInputCommandInteraction): Promise<void> => {
             if (!interaction.channel) {
-                await interaction.reply(DM_NOT_ALLOWED_ERR);
+                await interaction.reply({content: DM_NOT_ALLOWED_ERR, ephemeral: true});
+                return;
+            }
+
+            if(!await validPlayer(interaction.user.id)) {
+                await interaction.reply({content: PLAYER_DOESNT_EXIST, ephemeral: true});
                 return;
             }
 

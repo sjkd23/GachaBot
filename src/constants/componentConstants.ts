@@ -79,4 +79,10 @@ export namespace BUTTONS {
         .setCustomId('item_details')
         .setLabel('🔮 Item Details')
         .setStyle(ButtonStyle.Primary);
+
+    export const RADOM_ID: string = 'random';
+    export const RANDOM_BUTTON = new ButtonBuilder()
+        .setCustomId('random')
+        .setLabel('🔁 Random')
+        .setStyle(ButtonStyle.Primary);
 }
