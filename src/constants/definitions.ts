@@ -54,3 +54,5 @@ export const POINT_REWARDS = [
 export const MAX_CARD_NAME_LENGTH = 32;
 export const MAX_CARD_DESCRIPTION_LENGTH = 128;
 export const MAX_CARD_AUTHOR_LENGTH = 128;
+
+export const DEFAULT_SERIES = 'Wanderer';

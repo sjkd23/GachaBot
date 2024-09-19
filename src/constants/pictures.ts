@@ -1,4 +1,6 @@
 export const THUMBNAILS = {
+        unkown: 'https://cdn.discordapp.com/attachments/1209889694737895507/1286104323243249726/' + 
+                'redquestionmark.png?ex=66ecb17d&is=66eb5ffd&hm=f41dc78bbacb70296d31952e21b7bcd952b204426056beaee802e901520c6fbc&',
         common:
                 'https://cdn.discordapp.com/attachments/1209889694737895507/1281413008853041254/' +
                 'commonthumb.png?ex=66dba05c&is=66da4edc&hm=3684374e2657db3f7657d173948bee998fb264608cb6ffbf179581674896526d&',

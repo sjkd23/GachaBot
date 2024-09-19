@@ -1,7 +1,8 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputApplicationCommandData, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { componentCollector } from "../collectors/componentCollectors";
 import { formatTimeLeft, randomPointReward } from "../utils/misc";
-import { changeWallet, checkDailyCalendarTime } from "../dbFunctions";
+import { changeWallet, checkDailyCalendarTime, validPlayer } from "../dbFunctions";
+import { DM_NOT_ALLOWED_ERR, PLAYER_DOESNT_EXIST } from "../constants/errors";
 
 const MAX_CLICKS = 5;
 export const Daily = {
@@ -10,6 +11,15 @@ export const Daily = {
         .setDescription('Your daily calendar to get free stuff!'),
 
     run: async (interaction: ChatInputCommandInteraction): Promise<void> => {
+        if (!interaction.channel) {
+            await interaction.reply({content: DM_NOT_ALLOWED_ERR, ephemeral: true});
+            return;
+        }
+
+        if(!await validPlayer(interaction.user.id)) {
+            await interaction.reply({content: PLAYER_DOESNT_EXIST, ephemeral: true});
+            return;
+        }
 
         const { canUse, timeLeft } = await checkDailyCalendarTime(interaction.user.id);
 

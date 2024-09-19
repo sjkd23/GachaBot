@@ -1,5 +1,5 @@
 import pool from './db';
-import { Card, Item, Player, PlayerInventory, Rarity, Series } from './constants/definitions';
+import { Card, Player, PlayerInventory, Rarity, Series } from './constants/definitions';
 import { hasBeen24Hours, numberToRarity, parseTimestamp, rarityToNumber } from './utils/misc';
 import { processAndUploadToCloudinary } from './utils/api';
 
@@ -7,7 +7,9 @@ export async function insertPlayer(discord_id: string, username: string) {
     const query = 'INSERT INTO player (discord_id, username) VALUES ($1, $2)';
     const values = [discord_id, username];
     await pool.query(query, values);
+
 }
+
 
 export async function getPlayer(discord_id: string): Promise<Player> {
     const query = 'SELECT * FROM player WHERE discord_id = $1'
@@ -20,8 +22,26 @@ export async function getPlayer(discord_id: string): Promise<Player> {
         username: row.username,
         wallet: row.wallet
     }
-
     return player;
+}
+
+export async function validPlayer(discord_id: string): Promise<boolean> {
+    const query = 'SELECT * FROM player WHERE discord_id = $1';
+    const res = await pool.query(query, [discord_id]);
+
+    if (res.rows.length > 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+export async function getUserRole(discord_id: string): Promise<string> {
+    const query = 'SELECT role FROM player WHERE discord_id = $1'
+
+    const res = await pool.query(query, [discord_id]);
+
+    return res.rows[0].role;
 }
 
 export async function generateUniqueCardID(): Promise<string> {
@@ -147,7 +167,7 @@ export async function checkCardList({
     }
 
     if (series) {
-        const seriesID = await getSeriesID(series); 
+        const seriesID = await getSeriesID(series);
         params.push(seriesID);
         content.push(`series = $${params.length}`);
     }
@@ -315,23 +335,23 @@ export async function idToSeries(seriesID: number): Promise<Series> {
 export async function checkDailyCalendarTime(discord_id: string): Promise<{ canUse: boolean; timeLeft?: number }> {
     const query = 'SELECT last_use FROM daily_calendar WHERE discord_id = $1 LIMIT 1';
     const res = await pool.query(query, [discord_id]);
-  
+
     if (res.rows.length > 0) {
-      const lastUsedTimestamp = parseTimestamp(res.rows[0].last_use);
-      const { expired, timeLeft } = hasBeen24Hours(lastUsedTimestamp);
-  
-      if (expired) {
+        const lastUsedTimestamp = parseTimestamp(res.rows[0].last_use);
+        const { expired, timeLeft } = hasBeen24Hours(lastUsedTimestamp);
+
+        if (expired) {
+            await addToCalendar(discord_id);
+            return { canUse: true };
+        } else {
+            return { canUse: false, timeLeft };
+        }
+    } else {
         await addToCalendar(discord_id);
         return { canUse: true };
-      } else {
-        return { canUse: false, timeLeft };
-      }
-    } else {
-      await addToCalendar(discord_id);
-      return { canUse: true };
     }
-  }
-  
+}
+
 
 export async function addToCalendar(discord_id: string): Promise<void> {
     const query = `
@@ -340,7 +360,6 @@ export async function addToCalendar(discord_id: string): Promise<void> {
       ON CONFLICT (discord_id) DO UPDATE
       SET last_use = EXCLUDED.last_use
     `;
-  
+
     await pool.query(query, [discord_id]);
-  }
-  
+}

@@ -1,7 +1,7 @@
-import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder, User } from "discord.js";
-import { addCardToPlayerInventory, changeWallet } from "../dbFunctions";
+import { ChatInputCommandInteraction, SlashCommandBuilder, User } from "discord.js";
+import { addCardToPlayerInventory, changeWallet, validPlayer } from "../dbFunctions";
 import { getRandomCard } from "../utils/misc";
-import { DM_NOT_ALLOWED_ERR } from "../constants/errors";
+import { DM_NOT_ALLOWED_ERR, PLAYER_DOESNT_EXIST } from "../constants/errors";
 import { Card } from "../constants/definitions";
 import { handleCardCycling } from "../utils/componentsUils";
 import { cardEmbed } from "../utils/embeds";
@@ -19,7 +19,12 @@ export const Roll = {
 
     run: async (interaction: ChatInputCommandInteraction): Promise<void> => {
         if (!interaction.channel) {
-            await interaction.reply(DM_NOT_ALLOWED_ERR);
+            await interaction.reply({content: DM_NOT_ALLOWED_ERR, ephemeral: true});
+            return;
+        }
+
+        if(!await validPlayer(interaction.user.id)) {
+            await interaction.reply({content: PLAYER_DOESNT_EXIST, ephemeral: true});
             return;
         }
 

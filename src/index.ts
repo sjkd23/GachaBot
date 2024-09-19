@@ -12,6 +12,8 @@ import { Roll } from './commands/roll';
 import { Stats } from './commands/stats';
 import { Inventory } from './commands/inventory';
 import { Daily } from './commands/daily';
+import { Start } from './commands/start';
+import { Help } from './commands/help';
 
 config();
 
@@ -54,7 +56,9 @@ async function main() {
           Roll.info.toJSON(),
           Stats.info.toJSON(),
           Inventory.info.toJSON(),
-          Daily.info.toJSON()
+          Daily.info.toJSON(),
+          Start.info.toJSON(),
+          Help.info.toJSON()
         ]
       }
     );
@@ -94,6 +98,12 @@ client.on('interactionCreate', async (interaction) => {
   }
   if (commandName === 'daily') {
     await Daily.run(interaction);
+  }
+  if (commandName === 'start') {
+    await Start.run(interaction);
+  }
+  if (commandName === 'help') {
+    await Help.run(interaction);
   }
 })
 
