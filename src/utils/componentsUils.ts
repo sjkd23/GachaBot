@@ -1,7 +1,7 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, MessageActionRowComponentBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, User } from "discord.js";
-import { Card, Series } from "../constants/definitions";
+import { ActionRow, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, MessageActionRowComponentBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, User } from "discord.js";
+import { Card, Item, Player, PlayerItemInventory, Series } from "../constants/definitions";
 import { getAllSeries, getCard } from "../dbFunctions";
-import { cardEmbed } from "./embeds";
+import { cardEmbed, highlightSelection, itemInventoryEmbed } from "./embeds";
 import { BUTTONS as b } from "../constants/componentConstants";
 import { componentCollector } from "../collectors/componentCollectors";
 
@@ -40,10 +40,10 @@ export async function handleCardCycling(
     await cycleButtonStatus(currentCard, cardAmnt, prev, next);
 
     const buttons: ButtonBuilder[] = [];
-    if(back){
+    if (back) {
         buttons.push(b.BACK_BUTTON);
     }
-    
+
     buttons.push(prev, next, done);
     const buttonRow = createButtonRow(buttons);
 
@@ -61,7 +61,7 @@ export async function handleCardCycling(
         } else if (buttonID === null) {
             on = false;
         } else if (buttonID === b.BACK_ID) {
-            on = false; 
+            on = false;
             return b.BACK_ID;
         }
 
@@ -95,17 +95,17 @@ export function createButtonRow(buttons: ButtonBuilder[]): ActionRowBuilder<Mess
 
 export const viewCardSelect = (): StringSelectMenuBuilder => {
     return new StringSelectMenuBuilder()
-	.setCustomId('select')
-	.addOptions(
-		new StringSelectMenuOptionBuilder()
-			.setLabel('Rarity')
-			.setValue('rarity')
-			.setDescription('View by card rarity'),
-        new StringSelectMenuOptionBuilder()
-            .setLabel('Series')
-            .setValue('series')
-            .setDescription('View by card series')
-	);
+        .setCustomId('select')
+        .addOptions(
+            new StringSelectMenuOptionBuilder()
+                .setLabel('Rarity')
+                .setValue('rarity')
+                .setDescription('View by card rarity'),
+            new StringSelectMenuOptionBuilder()
+                .setLabel('Series')
+                .setValue('series')
+                .setDescription('View by card series')
+        );
 };
 
 export const rarityCardSelect = (): StringSelectMenuBuilder => {
@@ -137,15 +137,15 @@ export const rarityCardSelect = (): StringSelectMenuBuilder => {
 
 export async function seriesCardSelect(series?: Series[]): Promise<StringSelectMenuBuilder> {
     let allSeries: Series[] = [];
-    if(series) {
+    if (series) {
         allSeries = series;
     } else {
         allSeries = await getAllSeries();
     }
-    
+
     const SelectMenu = new StringSelectMenuBuilder()
         .setCustomId('series_select')
-    for(let ser of allSeries) {
+    for (let ser of allSeries) {
         SelectMenu.addOptions(
             new StringSelectMenuOptionBuilder()
                 .setLabel(ser.name)
@@ -154,4 +154,90 @@ export async function seriesCardSelect(series?: Series[]): Promise<StringSelectM
         )
     }
     return SelectMenu;
+}
+
+export async function itemPicker(
+    interaction: ChatInputCommandInteraction,
+    playerItems: PlayerItemInventory[],
+    gameID: number
+): Promise<PlayerItemInventory[]> {
+
+    const gameItems = playerItems.filter(item => item.item.game_id === gameID);
+
+
+    let currentItem = 0;
+
+    const chosenItems: PlayerItemInventory[] = [];
+    const selected: number[] = [];
+    let on = true;
+    while (on) {
+
+        const row = new ActionRowBuilder<MessageActionRowComponentBuilder>();
+        if (currentItem >= gameItems.length - 1) {
+            b.DOWN_BUTTON.setDisabled(true);
+        } else {
+            b.DOWN_BUTTON.setDisabled(false);
+        }
+        if (currentItem <= 0) {
+            b.UP_BUTTON.setDisabled(true);
+        } else {
+            b.UP_BUTTON.setDisabled(false);
+        }
+        if (selected.includes(currentItem)) {
+            row.setComponents([b.UP_BUTTON, b.DOWN_BUTTON, b.UNSELECT_BUTTON]);
+        } else {
+            row.setComponents([b.UP_BUTTON, b.DOWN_BUTTON, b.SELECT_BUTTON]);
+        }
+        if (selected.length > 0) {
+            row.addComponents([b.DONE_BUTTON, b.BACK_BUTTON])
+        } else {
+            row.addComponents([b.BACK_BUTTON])
+        }
+
+        await interaction.editReply({
+            content: 'Please pick an item',
+            embeds: [highlightSelection(await itemInventoryEmbed(interaction.user, gameItems,), currentItem, selected)],
+            components: [row]
+        })
+
+        const buttonID = await componentCollector(interaction);
+
+        if (buttonID === b.SELECT_ID) {
+            // Add the current item to chosenItems and selected
+            chosenItems.push(gameItems[currentItem]);
+            selected.push(currentItem);
+        } else if (buttonID === b.UNSELECT_ID) {
+            // Find the index of currentItem in selected
+            const indexInSelected = selected.indexOf(currentItem);
+            if (indexInSelected > -1) {
+                selected.splice(indexInSelected, 1);
+            }
+
+            // Find the corresponding item in chosenItems
+            const itemToRemove = gameItems[currentItem];
+            const indexInChosenItems = chosenItems.findIndex(
+                (item) => item.item.id === itemToRemove.item.id
+            );
+            if (indexInChosenItems > -1) {
+                chosenItems.splice(indexInChosenItems, 1);
+            }
+            
+        } else if (buttonID === b.UP_ID) {
+            currentItem--;
+
+        } else if (buttonID === b.DOWN_ID) {
+            currentItem++;
+
+        } else if (buttonID === b.DONE_ID) {
+            on = false;
+
+        } else if (buttonID === b.BACK_ID) {
+            chosenItems.splice(0, chosenItems.length)
+            on = false;
+
+        } else if (buttonID === null) {
+            on = false;
+        }
+    }
+    return chosenItems;
 }

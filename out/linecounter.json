@@ -1,0 +1,404 @@
+{
+    "extension": "linecounter",
+    "version": "0.2.7",
+    "workspace": "f:\\Program Files (x86)\\GachaBot",
+    "linecount": [
+        {
+            "version": "0.2.7",
+            "counttime": "2024-09-20 11:22:10",
+            "filesum": 60,
+            "codesum": 6210,
+            "commentsum": 108,
+            "blanksum": 457,
+            "statistics": {
+                ".json": {
+                    "code": 1149,
+                    "comment": 0,
+                    "blank": 38
+                },
+                ".md": {
+                    "code": 1,
+                    "comment": 0,
+                    "blank": 0
+                },
+                "": {
+                    "code": 15,
+                    "comment": 0,
+                    "blank": 3
+                },
+                ".ts": {
+                    "code": 1962,
+                    "comment": 40,
+                    "blank": 414
+                },
+                ".js": {
+                    "code": 3083,
+                    "comment": 68,
+                    "blank": 2
+                }
+            },
+            "filelist": [
+                {
+                    "blank": 3,
+                    "code": 11,
+                    "comment": 0,
+                    "filename": ".env"
+                },
+                {
+                    "blank": 0,
+                    "code": 4,
+                    "comment": 0,
+                    "filename": ".gitignore"
+                },
+                {
+                    "blank": 0,
+                    "code": 41,
+                    "comment": 1,
+                    "filename": "dist\\collectors\\buttonCollector.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 49,
+                    "comment": 4,
+                    "filename": "dist\\collectors\\componentCollectors.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 74,
+                    "comment": 4,
+                    "filename": "dist\\collectors\\components.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 31,
+                    "comment": 0,
+                    "filename": "dist\\collectors\\message.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 31,
+                    "comment": 0,
+                    "filename": "dist\\collectors\\messageCollectors.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 134,
+                    "comment": 0,
+                    "filename": "dist\\commands\\addcard.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 60,
+                    "comment": 0,
+                    "filename": "dist\\commands\\daily.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 113,
+                    "comment": 0,
+                    "filename": "dist\\commands\\fish.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 54,
+                    "comment": 0,
+                    "filename": "dist\\commands\\help.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 150,
+                    "comment": 1,
+                    "filename": "dist\\commands\\inventory.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 66,
+                    "comment": 0,
+                    "filename": "dist\\commands\\roll.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 33,
+                    "comment": 0,
+                    "filename": "dist\\commands\\start.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 39,
+                    "comment": 0,
+                    "filename": "dist\\commands\\stats.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 145,
+                    "comment": 1,
+                    "filename": "dist\\commands\\uinventory.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 85,
+                    "comment": 0,
+                    "filename": "dist\\commands\\viewcards.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 73,
+                    "comment": 0,
+                    "filename": "dist\\constants\\buttons.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 113,
+                    "comment": 0,
+                    "filename": "dist\\constants\\componentConstants.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 31,
+                    "comment": 0,
+                    "filename": "dist\\constants\\definitions.js"
+                },
+                {
+                    "blank": 1,
+                    "code": 14,
+                    "comment": 0,
+                    "filename": "dist\\constants\\emojis.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 7,
+                    "comment": 0,
+                    "filename": "dist\\constants\\errors.js"
+                },
+                {
+                    "blank": 1,
+                    "code": 14,
+                    "comment": 0,
+                    "filename": "dist\\constants\\pictures.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 19,
+                    "comment": 1,
+                    "filename": "dist\\db.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 419,
+                    "comment": 0,
+                    "filename": "dist\\dbFunctions.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 13,
+                    "comment": 0,
+                    "filename": "dist\\definitions.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 102,
+                    "comment": 0,
+                    "filename": "dist\\index.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 294,
+                    "comment": 19,
+                    "filename": "dist\\utils.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 93,
+                    "comment": 9,
+                    "filename": "dist\\utils\\api.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 122,
+                    "comment": 8,
+                    "filename": "dist\\utils\\components.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 201,
+                    "comment": 3,
+                    "filename": "dist\\utils\\componentsUils.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 146,
+                    "comment": 7,
+                    "filename": "dist\\utils\\embeds.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 317,
+                    "comment": 10,
+                    "filename": "dist\\utils\\misc.js"
+                },
+                {
+                    "blank": 38,
+                    "code": 1109,
+                    "comment": 0,
+                    "filename": "package-lock.json"
+                },
+                {
+                    "blank": 0,
+                    "code": 27,
+                    "comment": 0,
+                    "filename": "package.json"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "README.md"
+                },
+                {
+                    "blank": 5,
+                    "code": 36,
+                    "comment": 4,
+                    "filename": "src\\collectors\\componentCollectors.ts"
+                },
+                {
+                    "blank": 5,
+                    "code": 16,
+                    "comment": 0,
+                    "filename": "src\\collectors\\message.ts"
+                },
+                {
+                    "blank": 23,
+                    "code": 124,
+                    "comment": 0,
+                    "filename": "src\\commands\\addcard.ts"
+                },
+                {
+                    "blank": 13,
+                    "code": 50,
+                    "comment": 0,
+                    "filename": "src\\commands\\daily.ts"
+                },
+                {
+                    "blank": 23,
+                    "code": 96,
+                    "comment": 0,
+                    "filename": "src\\commands\\fish.ts"
+                },
+                {
+                    "blank": 4,
+                    "code": 43,
+                    "comment": 0,
+                    "filename": "src\\commands\\help.ts"
+                },
+                {
+                    "blank": 27,
+                    "code": 139,
+                    "comment": 2,
+                    "filename": "src\\commands\\inventory.ts"
+                },
+                {
+                    "blank": 13,
+                    "code": 55,
+                    "comment": 0,
+                    "filename": "src\\commands\\roll.ts"
+                },
+                {
+                    "blank": 5,
+                    "code": 21,
+                    "comment": 0,
+                    "filename": "src\\commands\\start.ts"
+                },
+                {
+                    "blank": 5,
+                    "code": 29,
+                    "comment": 0,
+                    "filename": "src\\commands\\stats.ts"
+                },
+                {
+                    "blank": 13,
+                    "code": 84,
+                    "comment": 0,
+                    "filename": "src\\commands\\viewcards.ts"
+                },
+                {
+                    "blank": 21,
+                    "code": 109,
+                    "comment": 0,
+                    "filename": "src\\constants\\componentConstants.ts"
+                },
+                {
+                    "blank": 14,
+                    "code": 70,
+                    "comment": 0,
+                    "filename": "src\\constants\\definitions.ts"
+                },
+                {
+                    "blank": 2,
+                    "code": 11,
+                    "comment": 0,
+                    "filename": "src\\constants\\emojis.ts"
+                },
+                {
+                    "blank": 2,
+                    "code": 5,
+                    "comment": 0,
+                    "filename": "src\\constants\\errors.ts"
+                },
+                {
+                    "blank": 1,
+                    "code": 15,
+                    "comment": 0,
+                    "filename": "src\\constants\\pictures.ts"
+                },
+                {
+                    "blank": 3,
+                    "code": 14,
+                    "comment": 1,
+                    "filename": "src\\db.ts"
+                },
+                {
+                    "blank": 86,
+                    "code": 343,
+                    "comment": 0,
+                    "filename": "src\\dbFunctions.ts"
+                },
+                {
+                    "blank": 18,
+                    "code": 97,
+                    "comment": 0,
+                    "filename": "src\\index.ts"
+                },
+                {
+                    "blank": 12,
+                    "code": 72,
+                    "comment": 9,
+                    "filename": "src\\utils\\api.ts"
+                },
+                {
+                    "blank": 30,
+                    "code": 181,
+                    "comment": 3,
+                    "filename": "src\\utils\\componentsUils.ts"
+                },
+                {
+                    "blank": 33,
+                    "code": 116,
+                    "comment": 11,
+                    "filename": "src\\utils\\embeds.ts"
+                },
+                {
+                    "blank": 56,
+                    "code": 236,
+                    "comment": 10,
+                    "filename": "src\\utils\\misc.ts"
+                },
+                {
+                    "blank": 0,
+                    "code": 13,
+                    "comment": 0,
+                    "filename": "tsconfig.json"
+                }
+            ]
+        }
+    ]
+}

@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, ButtonBuilder, EmbedBuilder } from "discord.js";
 import { Card, PlayerItemInventory } from "../constants/definitions";
-import { getAllSeries, getPlayerCards, getPlayerItems, validPlayer } from "../dbFunctions";
+import { getAllSeries, getPlayerCards, getAllPlayerItems, validPlayer } from "../dbFunctions";
 import { createButtonRow, handleCardCycling, rarityCardSelect, seriesCardSelect, viewCardSelect } from "../utils/componentsUils";
 import { cardInventoryEmbed, itemInventoryEmbed } from "../utils/embeds";
 import { BUTTONS as b } from "../constants/componentConstants";
@@ -29,7 +29,7 @@ export const Inventory = {
         const user = interaction.user;
 
         const cards: Card[] = await getPlayerCards(user.id);
-        const items: PlayerItemInventory[] = await getPlayerItems(user.id);
+        const items: PlayerItemInventory[] = await getAllPlayerItems(user.id);
 
         let state = 'initial_inventory';
 

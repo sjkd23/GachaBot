@@ -26,7 +26,7 @@ export async function playerStatsEmbed(player: Player, cards: Card[], interactio
             {
                 name: ' ',
                 value: `${rarityList}`, inline: true
-            }, {name: ' ', value: `__**Wallet:**__ ${player.wallet}`, inline: true }
+            }, { name: ' ', value: `__**Wallet:**__ ${player.wallet}`, inline: true }
         )
         .setColor(getRandomColor())
 
@@ -64,7 +64,7 @@ export async function cardInventoryEmbed(user: User, cards: Card[]): Promise<Emb
         .setTitle(`${cards.length} total cards`)
         .addFields(
             { name: ' ', value: rarityList, inline: true },
-            { name: ' ', value: seriesList, inline: true})
+            { name: ' ', value: seriesList, inline: true })
         .setColor(getRandomColor())
         .setAuthor({ name: user.username, iconURL: user.displayAvatarURL({ size: 1024 }) });
 
@@ -75,15 +75,65 @@ export async function itemInventoryEmbed(user: User, items: PlayerItemInventory[
     const embed = new EmbedBuilder()
         .setTitle(`${user.username}'s item inventory:`)
         .setAuthor({ name: user.username, iconURL: user.displayAvatarURL({ size: 1024 }) })
-        .setColor(getRandomColor())
+        .setColor(`#000000`)
 
     for (let i = 0; i < items.length; i++) {
         const item = items[i].item;
-        embed.addFields({ name: item.name, value: item.description });
+        embed.addFields({ name: `${item.name} x ${items[i].quantity}`, value: item.description });
     }
 
     return embed;
 }
+
+export async function itemEmbed(items: PlayerItemInventory[]): Promise<EmbedBuilder> {
+    items.sort((a, b) => a.item.id - b.item.id);
+    const embed = new EmbedBuilder()
+        .setTitle('Items')
+    for (let item of items) {
+        embed.addFields({ name: `${item.item.name} (${item.quantity})`, value: item.item.description });
+    }
+
+    return embed;
+}
+
+export function highlightSelection(
+    embed: EmbedBuilder,
+    currentSelection: number,
+    selected: number[]
+  ): EmbedBuilder {
+    const newEmbed = new EmbedBuilder(embed.data);
+  
+    const fields = newEmbed.data.fields || [];
+  
+    const modifiedFields = fields.map((field, index) => {
+      let newName = field.name;
+  
+      newName = newName.replace(/^[▶✅]+\s*/, '');
+  
+      let prefix = '';
+  
+      if (index === currentSelection) {
+        prefix += '▶';
+      }
+  
+      if (selected.includes(index)) {
+        prefix += '✅';
+      }
+  
+      if (prefix) {
+        newName = `${prefix} ${newName}`;
+      }
+  
+      return {
+        ...field,
+        name: newName,
+      };
+    });
+  
+    newEmbed.setFields(modifiedFields);
+    return newEmbed;
+  }
+  
 
 export async function cardEmbed(card: Card): Promise<EmbedBuilder> {
 
@@ -107,7 +157,7 @@ export async function fishEmbed(fish: Fish): Promise<EmbedBuilder> {
         .addFields({ name: ' ', value: `You caught a ${fish.name}!\n\n **${fish.rarity.toUpperCase()}** fish!` })
         .setThumbnail(fish.url)
         .setColor(await getEmbedColor(fish.rarity))
-    
+
     return embed;
 }
 
@@ -174,7 +224,7 @@ export const getRarityList = (
 
 export const getSeriesList = (seriesCount: Record<string, number>): string => {
     let seriesList = `**__SERIES__**\n`;
-    
+
     for (const [series, count] of Object.entries(seriesCount)) {
         seriesList += `\`${series}: ${count}\`\n`;
     }

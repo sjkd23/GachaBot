@@ -47,6 +47,7 @@ async function main() {
 
     const addCardCommand = await AddCard();
     const viewCardCommand = await ViewCards();
+    const fishCommand = await Fish();
 
     await rest.put(
       Routes.applicationGuildCommands(clientID!, guildID!),
@@ -60,7 +61,7 @@ async function main() {
           Daily.info.toJSON(),
           Start.info.toJSON(),
           Help.info.toJSON(),
-          Fish.info.toJSON()
+          fishCommand.info.toJSON()
         ]
       }
     );
@@ -108,7 +109,8 @@ client.on('interactionCreate', async (interaction) => {
     await Help.run(interaction);
   }
   if (commandName === 'fish') {
-    await Fish.run(interaction);
+    const fishCommand = await Fish();
+    await fishCommand.run(interaction);
   }
 })
 

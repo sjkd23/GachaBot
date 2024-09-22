@@ -1,5 +1,5 @@
 import pool from './db';
-import { Card, Fish, Player, PlayerItemInventory, Rarity, Series } from './constants/definitions';
+import { Card, Fish, Item, Player, PlayerItemInventory, Rarity, Series } from './constants/definitions';
 import { hasBeen24Hours, numberToRarity, parseTimestamp, rarityToNumber } from './utils/misc';
 import { processAndUploadToCloudinary } from './utils/api';
 
@@ -116,10 +116,20 @@ export async function insertItem(name: string, effect: string) {
     await pool.query(query, values);
 }
 
-export async function getAllItems() {
-    const query = 'SELECT * FROM item';
+export async function getAllItems(): Promise<Item[]> {
+    const query = 'SELECT * FROM item ORDER BY id';
     const res = await pool.query(query);
-    return res.rows;
+
+    const items: Item[] = await Promise.all(
+        res.rows.map(async (row) => ({
+            id: row.id,
+            name: row.name,
+            description: row.description,
+            type_id: row.type_id,
+            game_id: row.game_id
+        }))
+    );
+    return items;
 }
 
 export async function checkCardList({
@@ -169,7 +179,7 @@ export async function checkCardList({
     if (series) {
         const seriesID = await getSeriesID(series);
         params.push(seriesID);
-        content.push(`series = $${params.length}`);
+        content.push(`series_id = $${params.length}`);
     }
 
     const query = content.length === 0
@@ -272,10 +282,10 @@ export async function getPlayerCards(discord_id: string): Promise<Card[]> {
     return cards;
 }
 
-export async function getPlayerItems(discord_id: string): Promise<PlayerItemInventory[]> {
+export async function getAllPlayerItems(discord_id: string): Promise<PlayerItemInventory[]> {
 
     const query = `
-        SELECT i.name, i.description, pi.quantity
+        SELECT i.id, i.name, i.description, i.type_id, i.game_id, pi.quantity
         FROM player_item_inventory pi
         JOIN item i ON pi.item_id = i.id
         WHERE pi.discord_id = $1
@@ -288,8 +298,11 @@ export async function getPlayerItems(discord_id: string): Promise<PlayerItemInve
 
     const playerInventory: PlayerItemInventory[] = res.rows.map((row: any) => ({
         item: {
+            id: row.id,
             name: row.name,
-            description: row.description
+            description: row.description,
+            type_id: row.type_id,
+            game_id: row.game_id
         },
         quantity: row.quantity
     }));
@@ -423,5 +436,54 @@ export async function givePlayerFish(discord_id: string, fish_id: number): Promi
 
         await pool.query(insertQuery, values);
         return 1;
+    }
+}
+
+export async function getItemByName(name: string): Promise<Item> {
+    const query = 'SELECT * FROM item WHERE name = $1';
+
+    const res = await pool.query(query, [name]);
+
+    const row = res.rows[0];
+    const item: Item = {
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        type_id: row.type_id,
+        game_id: row.game_id
+    };
+    return item;
+}
+
+export async function getPlayerItem(discord_id: string, item: Item): Promise<PlayerItemInventory> {
+    const query = 'SELECT * FROM player_item_inventory WHERE discord_id = $1 AND item_id = $2';
+    const values = [discord_id, item.id];
+
+    const res = await pool.query(query, values);
+
+    const row = res.rows[0];
+    const playerItem: PlayerItemInventory = {
+        item: item,
+        quantity: row.quantity
+    }
+
+    return playerItem;
+}
+
+export async function reduceItemQuantity(discord_id: string, item: Item, amount: number = 1): Promise<number> {
+
+    const playerItem = await getPlayerItem(discord_id, item);
+    const currentAmount = playerItem.quantity;
+
+    if((currentAmount - amount) < 0) {
+        return -1;
+    } else {
+        const newAmount = currentAmount - amount;
+        const query = 'UPDATE player_item_inventory set quantity = $3 WHERE discord_id = $1 AND item_id = $2';
+        const values = [discord_id, item.id, newAmount];
+
+        await pool.query(query, values);
+
+        return newAmount;
     }
 }

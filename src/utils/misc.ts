@@ -1,25 +1,18 @@
 import { ChatInputCommandInteraction } from "discord.js";
-import { Card, Fish, POINT_REWARDS, Rarity, Series } from "../constants/definitions";
+import { BAIT_RARITIES_MODIFIERS, Card, Fish, Item, POINT_REWARDS, RARITIES, Rarity, Series } from "../constants/definitions";
 import axios from 'axios';
-import { checkCardList, checkFishByRarity } from "../dbFunctions";
+import { checkCardList, checkFishByRarity, getAllItems } from "../dbFunctions";
 import sharp from 'sharp';
 
 export async function rarityToNumber(rarity: Rarity): Promise<number> {
 
-    if (rarity === 'common') {
-        return 1;
+    let rarityNumber: number = 1;
+    for (let rar of RARITIES) {
+        if (rar.name === rarity) {
+            rarityNumber = rar.id;
+        }
     }
-    if (rarity === 'uncommon') {
-        return 2;
-    }
-    if (rarity === 'rare') {
-        return 3;
-    }
-    if (rarity === 'legendary') {
-        return 4;
-    } else {
-        return 5;
-    }
+    return rarityNumber;
 }
 
 export function getRandomRarity(): Rarity {
@@ -82,21 +75,14 @@ export function isValidCardID(id: string): boolean {
 }
 
 export async function numberToRarity(num: number): Promise<Rarity> {
-    if (num === 1) {
-        return 'common';
+
+    let rarityString: Rarity = 'common';
+    for (let rarity of RARITIES) {
+        if (rarity.id === num) {
+            rarityString = rarity.name;
+        }
     }
-    if (num === 2) {
-        return 'uncommon';
-    }
-    if (num === 3) {
-        return 'rare';
-    }
-    if (num === 4) {
-        return 'legendary';
-    }
-    else {
-        return 'divine';
-    }
+    return rarityString;
 }
 
 export async function getRandomCard(): Promise<Card> {
@@ -109,7 +95,7 @@ export async function getRandomCard(): Promise<Card> {
 }
 
 export async function getRandomFish(rarity?: Rarity): Promise<Fish> {
-    if(!rarity) {
+    if (!rarity) {
         rarity = getRandomRarity();
     }
     const fish = await checkFishByRarity(rarity);
@@ -266,39 +252,39 @@ export function formatTimeLeft(timeLeftInMs: number): string {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
-  
+
     let timeString = '';
     if (hours > 0) timeString += `${hours}h `;
     if (minutes > 0) timeString += `${minutes}m `;
     timeString += `${seconds}s`;
-  
+
     return timeString.trim();
-  }
+}
 
 export async function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function fishCatchTime(rarity: Rarity) {
-    let min = 1000;
-    let max = 3000;
 
-    if (rarity === 'common') {
-        min = 5000;
-        max = 7000;
-    } else if (rarity === 'uncommon') {
-        min = 2500;
-        max = 5000
-    } else if (rarity === 'rare') {
-        min = 1500;
-        max = 2500;
-    } else if (rarity === 'legendary') {
-        min = 500;
-        max = 1500;
-    } else {
-        min = 250;
-        max = 500;
+
+
+export function getGame(gameID: number) {
+    if (gameID === 1) {
+        return 'gacha'
+    } else if (gameID === 2) {
+        return 'fishing'
+    }
+}
+
+export async function getBaitTypes(): Promise<Item[]> {
+    const items = await getAllItems();
+
+    const baitItems: Item[] = [];
+    for(let item of items) {
+        if(item.name.toLowerCase().includes('bait')) {
+            baitItems.push(item);
+        }
     }
 
-    return randomIntFromInterval(min, max);
+    return baitItems;
 }

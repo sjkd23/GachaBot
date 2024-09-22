@@ -38,6 +38,9 @@ export const Help = {
             }, {
                 name: ` `,
                 value: `\`/daily\`:\nYour daily calendar game! Pop 5 ballons a day for free stuff!`
+            }, {
+                name: ` `,
+                value: `\`/fish\`:\n Go Fishing!`
             });
             
         const initialHelpMsg = {

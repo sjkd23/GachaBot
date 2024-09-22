@@ -1,3 +1,5 @@
+import { ModalSubmitInteraction } from "discord.js";
+
 export type Rarity = 'common' | 'uncommon' | 'rare' | 'legendary' | 'divine';
 
 export type Card = {
@@ -21,10 +23,12 @@ export type Series = {
     name: string,
     description: string
 }
-
 export interface Item {
+    id: number;
     name: string;
     description: string;
+    type_id: number;
+    game_id: number;
 }
 
 export interface PlayerItemInventory {
@@ -48,12 +52,20 @@ export type PlayerFishInventory = {
 
 
 export const RARITIES = [
-    { name: 'common', value: 'common' },
-    { name: 'uncommon', value: 'uncommon' },
-    { name: 'rare', value: 'rare' },
-    { name: 'legendary', value: 'legendary' },
-    { name: 'divine', value: 'divine' }
+    { name: 'common' as Rarity, id: 1 },
+    { name: 'uncommon' as Rarity, id: 2 },
+    { name: 'rare' as Rarity, id: 3 },
+    { name: 'legendary' as Rarity, id: 4 },
+    { name: 'divine' as Rarity, id: 5 }
 ];
+
+export const BAIT_RARITIES_MODIFIERS = [
+    { name: 'common', modifier: 1},
+    { name: 'uncommon', modifier: 1.25},
+    { name: 'rare', modifier: 1.75},
+    { name: 'legendary', modifier: 2.5},
+    { name: 'divine', modifier: 4 }
+]
 
 export const POINT_REWARDS = [
     { name: 'Tiny Point Reward', value: 1, weight: 1 },
@@ -63,11 +75,21 @@ export const POINT_REWARDS = [
     { name: 'Huge Point Reward', value: 100, weight: 7 },
     { name: 'Insane Point Reward', value: 250, weight: 3 },
     { name: 'JACKPOT Point Reward', value: 500, weight: 1 }
-  ];
-  
+];
+
 
 export const MAX_CARD_NAME_LENGTH = 32;
 export const MAX_CARD_DESCRIPTION_LENGTH = 128;
 export const MAX_CARD_AUTHOR_LENGTH = 128;
 
 export const DEFAULT_SERIES = 'Wanderer';
+
+export const GAMES = [
+    { name: 'gacha', id: 1 },
+    { name: 'fishing', id: 2 }
+];
+
+export const ITEM_TYPES = [
+    { name: 'equipment', id: 1 },
+    { name: 'consumable', id: 2 }
+]

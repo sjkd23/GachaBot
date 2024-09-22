@@ -14,6 +14,18 @@ export namespace BUTTONS {
         .setStyle(ButtonStyle.Primary)
         .setDisabled(true);
 
+    export const UP_ID: string = 'up';
+    export const UP_BUTTON = new ButtonBuilder()
+        .setCustomId(UP_ID)
+        .setLabel('🔼 Up')
+        .setStyle(ButtonStyle.Primary);
+
+    export const DOWN_ID: string = 'down';
+    export const DOWN_BUTTON = new ButtonBuilder()
+        .setCustomId(DOWN_ID)
+        .setLabel('🔽 Down')
+        .setStyle(ButtonStyle.Primary);
+
     export const ROLL_AGAIN_ID: string = 'roll_again';
     export const ROLL_AGAIN_BUTTON = new ButtonBuilder()
         .setCustomId(ROLL_AGAIN_ID)
@@ -86,6 +98,12 @@ export namespace BUTTONS {
         .setLabel('🔁 Random')
         .setStyle(ButtonStyle.Primary);
 
+    export const CAST_ID: string = 'cast';
+    export const CAST_BUTTON = new ButtonBuilder()
+        .setCustomId(CAST_ID)
+        .setLabel('👋 Cast')
+        .setStyle(ButtonStyle.Success);
+
     export const FISH_AGAIN_ID: string = 'fish_again';
     export const FISH_AGAIN_BUTTON = new ButtonBuilder()
         .setCustomId('fish_again')
@@ -103,4 +121,22 @@ export namespace BUTTONS {
         .setCustomId('catch')
         .setLabel('🎣 Catch!')
         .setStyle(ButtonStyle.Success);
+
+    export const SELECT_ID: string = 'select';
+    export const SELECT_BUTTON = new ButtonBuilder()
+        .setCustomId('select')
+        .setLabel('✅ Select')
+        .setStyle(ButtonStyle.Success);
+    
+    export const UNSELECT_ID: string = 'unselect';
+    export const UNSELECT_BUTTON = new ButtonBuilder()
+        .setCustomId(UNSELECT_ID)
+        .setLabel('❌ Unselect')
+        .setStyle(ButtonStyle.Danger);
+    
+    export const USE_ITEM_ID: string = 'use_item';
+    export const USE_ITEM_BUTTON = new ButtonBuilder()
+        .setCustomId(USE_ITEM_ID)
+        .setLabel('🎒 Use Item(s)')
+        .setStyle(ButtonStyle.Primary);
     }

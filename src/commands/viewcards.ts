@@ -22,11 +22,17 @@ export const ViewCards = async () => {
                     .setRequired(false)
             )
             .addStringOption(option =>
-                option.setName('rarity')
-                    .setDescription('The rarity you want to view')
-                    .addChoices(...RARITIES)
-                    .setRequired(false)
-            )
+                option
+                  .setName('rarity')
+                  .setDescription('The rarity you want to view')
+                  .addChoices(
+                    ...RARITIES.map((rarity) => ({
+                      name: rarity.name,
+                      value: rarity.name,
+                    }))
+                  )
+                  .setRequired(false)
+              )
             .addStringOption(option =>
                 option.setName('url')
                     .setDescription('The URL you are looking for. The same picture from a different URL does NOT work.')
